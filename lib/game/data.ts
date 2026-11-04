@@ -10,17 +10,7 @@ import type {
   SubKey,
   AvatarConfig,
 } from './types'
-
-export const DEFAULT_AVATAR: AvatarConfig = {
-  gender: 'mulher',
-  skinTone: '#D99C72',
-  hairStyle: 'cacheado',
-  hairColor: '#211816',
-  eyeColor: '#3B281A',
-  outfit: 'camiseta',
-  outfitColor: '#215A99',
-  expression: 'sorriso',
-}
+export { DEFAULT_AVATAR } from './avatar'
 
 export const DAY_START = 7 * 60
 export const DAY_END = 24 * 60

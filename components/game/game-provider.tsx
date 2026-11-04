@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useReducer, type Dispatch, type ReactNode } from 'react'
 import { createInitialState, gameReducer, type GameAction } from '@/lib/game/engine'
 import type { GameState } from '@/lib/game/types'
-import { DEFAULT_AVATAR } from '@/lib/game/data'
+import { normalizeAvatarConfig } from '@/lib/game/avatar'
 
 const SAVE_KEY = 'the-path-of-webings:game:v1'
 
@@ -23,7 +23,7 @@ function restoredState(): GameState {
   try {
     const candidate = JSON.parse(window.localStorage.getItem(SAVE_KEY) ?? 'null') as Partial<GameState> | null
     if (!isRestorableState(candidate)) return createInitialState()
-    return { ...candidate, avatar: candidate.avatar ?? DEFAULT_AVATAR } as GameState
+    return { ...candidate, avatar: normalizeAvatarConfig(candidate.avatar), avatarReaction: null } as GameState
   } catch {
     return createInitialState()
   }
@@ -45,6 +45,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
       // The game remains playable if browser storage is unavailable.
     }
   }, [state])
+  useEffect(() => {
+    if (!state.avatarReaction) return
+    const timeout = window.setTimeout(() => dispatch({ type: 'CLEAR_AVATAR_REACTION' }), 900)
+    return () => window.clearTimeout(timeout)
+  }, [state.avatarReaction])
   return <GameContext.Provider value={{ state, dispatch }}>{children}</GameContext.Provider>
 }
 

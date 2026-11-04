@@ -111,9 +111,10 @@ export interface YearSnapshot {
 export type DeathCause = 'saude' | 'exaustao' | 'felicidade' | 'velhice'
 
 export type Gender = 'mulher' | 'homem'
-export type HairStyle = 'curto' | 'cacheado' | 'longo' | 'trancado'
+export type HairStyle = 'curto' | 'cacheado' | 'longo' | 'trancado' | 'afro' | 'coques'
 export type Outfit = 'camiseta' | 'moletom' | 'camisa' | 'jaqueta'
 export type Expression = 'sorriso' | 'serio' | 'calmo'
+export type AvatarReaction = 'celebrate' | 'rest' | null
 
 export interface AvatarConfig {
   gender: Gender
@@ -142,6 +143,7 @@ export interface GameState {
   view: 'life' | 'social' | 'sleep'
   name: string
   avatar: AvatarConfig
+  avatarReaction: AvatarReaction
   age: number
   phase: number
   minutes: number

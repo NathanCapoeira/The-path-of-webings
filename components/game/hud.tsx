@@ -23,7 +23,7 @@ export function Hud() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <div className="size-12 shrink-0 overflow-hidden rounded-2xl bg-secondary">
-            <Avatar avatar={state.avatar} />
+            <Avatar avatar={state.avatar} age={state.age} reaction={state.avatarReaction} />
           </div>
           <div className="flex min-w-0 flex-col">
           <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">

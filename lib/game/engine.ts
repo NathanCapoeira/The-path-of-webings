@@ -273,6 +273,7 @@ export function createInitialState(name = '', avatar: AvatarConfig = DEFAULT_AVA
     view: 'life',
     name,
     avatar,
+    avatarReaction: null,
     age: 1,
     phase: 0,
     minutes: DAY_START,
@@ -320,6 +321,7 @@ export type GameAction =
   | { type: 'GO_TO_SLEEP' }
   | { type: 'CANCEL_SLEEP' }
   | { type: 'CONFIRM_SLEEP'; optionIds: string[] }
+  | { type: 'CLEAR_AVATAR_REACTION' }
 
 function doActivity(state: GameState, id: ActivityId): GameState {
   if (!isActivityAvailable(state, id)) return state
@@ -330,6 +332,8 @@ function doActivity(state: GameState, id: ActivityId): GameState {
     activityCounts: { ...state.activityCounts, [id]: state.activityCounts[id] + 1 },
   }
   next = applyEffects(next, activity.effects, { fromActivity: true })
+  if (id === 'socializar' || id === 'criar') next = { ...next, avatarReaction: 'celebrate' }
+  if (id === 'descansar') next = { ...next, avatarReaction: 'rest' }
 
   if (id === 'criar') {
     const subs = computeSubs(state.main, state.subBase)
@@ -547,6 +551,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'CONFIRM_SLEEP':
       if (state.status !== 'playing' || state.view !== 'sleep') return state
       return sleep(state, action.optionIds)
+    case 'CLEAR_AVATAR_REACTION':
+      return { ...state, avatarReaction: null }
     default:
       return state
   }

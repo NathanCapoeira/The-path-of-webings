@@ -53,7 +53,7 @@ export function DeathScreen() {
           Fase 9 · Morte · Resumo
         </span>
         <div className="flex items-center gap-4">
-          <div className="size-16 shrink-0 overflow-hidden rounded-2xl bg-background text-foreground"><Avatar avatar={state.avatar} /></div>
+          <div className="size-16 shrink-0 overflow-hidden rounded-2xl bg-background text-foreground"><Avatar avatar={state.avatar} age={state.age} animate={false} /></div>
           <div>
             <h1 className="font-display text-3xl font-bold md:text-4xl">{cause.title}</h1>
             <p className="text-background/70">
