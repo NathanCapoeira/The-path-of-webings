@@ -72,6 +72,7 @@ export interface Reel {
   creator: string
   caption: string
   likes: string
+  media: string[]
 }
 
 export interface EventChoice {
@@ -171,6 +172,8 @@ export interface GameState {
   screenMinutesToday: number
   totalScreenMinutes: number
   reelsByCategory: Record<Category, number>
+  likesByCategory: Record<Category, number>
+  notInterestedByCategory: Record<Category, number>
   challenge: ScheduledChallenge | null
   challengesPassed: number
   challengesFailed: number
@@ -184,6 +187,7 @@ export interface GameState {
   forcedSleep: boolean
   log: LogEntry[]
   logCounter: number
+  lastReadLogId: number
   history: YearSnapshot[]
   deathCause: DeathCause | null
 }

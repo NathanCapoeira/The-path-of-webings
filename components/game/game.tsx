@@ -11,10 +11,12 @@ import { SleepScreen } from './sleep-screen'
 import { SocialScreen } from './social-screen'
 import { StartScreen } from './start-screen'
 import { PauseScreen } from './pause-screen'
+import { DiaryPanel } from './diary-panel'
 
 function GameView() {
   const { state } = useGame()
   const [selectedActivity, setSelectedActivity] = useState<ActivityId | null>(null)
+  const [diaryOpen, setDiaryOpen] = useState(false)
 
   if (state.status === 'start') return <StartScreen />
   if (state.status === 'paused') return <PauseScreen />
@@ -22,11 +24,12 @@ function GameView() {
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col gap-4 px-3 py-4 md:px-6 md:py-6">
-      {state.view !== 'social' ? <Hud previewActivityId={state.view === 'life' ? selectedActivity : null} /> : null}
+      {state.view !== 'social' ? <Hud previewActivityId={state.view === 'life' ? selectedActivity : null} onOpenDiary={() => setDiaryOpen(true)} /> : null}
       {state.view === 'life' ? <LifeScreen selectedActivity={selectedActivity} onSelectActivity={setSelectedActivity} /> : null}
-      {state.view === 'social' ? <SocialScreen /> : null}
+      {state.view === 'social' ? <SocialScreen diaryOpen={diaryOpen} onOpenDiary={() => setDiaryOpen(true)} /> : null}
       {state.view === 'sleep' ? <SleepScreen /> : null}
       <GameDialogs />
+      {diaryOpen ? <DiaryPanel onClose={() => setDiaryOpen(false)} /> : null}
     </main>
   )
 }

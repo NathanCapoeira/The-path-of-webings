@@ -322,6 +322,8 @@ export function createInitialState(name = '', avatar: AvatarConfig = DEFAULT_AVA
     screenMinutesToday: 0,
     totalScreenMinutes: 0,
     reelsByCategory: emptyCategoryCounts(),
+    likesByCategory: emptyCategoryCounts(),
+    notInterestedByCategory: emptyCategoryCounts(),
     challenge: null,
     challengesPassed: 0,
     challengesFailed: 0,
@@ -335,6 +337,7 @@ export function createInitialState(name = '', avatar: AvatarConfig = DEFAULT_AVA
     forcedSleep: false,
     log: [],
     logCounter: 0,
+    lastReadLogId: 0,
     history: [],
     deathCause: null,
   }
@@ -357,6 +360,7 @@ export type GameAction =
   | { type: 'CANCEL_SLEEP' }
   | { type: 'CONFIRM_SLEEP'; optionId: string | null }
   | { type: 'CLEAR_AVATAR_REACTION' }
+  | { type: 'MARK_LOG_READ' }
   | { type: 'EXIT_TO_MENU' }
   | { type: 'CONTINUE_GAME' }
 
@@ -582,6 +586,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           ...next.feedWeights,
           [category]: Math.min(8, next.feedWeights[category] + 0.8),
         },
+        likesByCategory: {
+          ...state.likesByCategory,
+          [category]: state.likesByCategory[category] + 1,
+        },
       }
     }
     case 'NOT_INTERESTED': {
@@ -594,6 +602,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         feedWeights: {
           ...state.feedWeights,
           [category]: Math.max(0.15, state.feedWeights[category] * 0.4),
+        },
+        notInterestedByCategory: {
+          ...state.notInterestedByCategory,
+          [category]: state.notInterestedByCategory[category] + 1,
         },
       }
       return loadNextReel(next)
@@ -620,6 +632,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return sleep(state, action.optionId)
     case 'CLEAR_AVATAR_REACTION':
       return { ...state, avatarReaction: null }
+    case 'MARK_LOG_READ':
+      return state.lastReadLogId >= state.logCounter ? state : { ...state, lastReadLogId: state.logCounter }
     case 'EXIT_TO_MENU':
       if (state.status !== 'playing') return state
       return { ...state, status: 'paused', view: 'life', modal: null, pendingEvent: null }

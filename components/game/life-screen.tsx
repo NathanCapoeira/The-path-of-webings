@@ -154,32 +154,6 @@ export function LifeScreen({ selectedActivity, onSelectActivity }: { selectedAct
           {!canSleep && !canDoActivity ? <Button variant="outline" className="h-11 rounded-2xl" onClick={() => { onSelectActivity(null); dispatch({ type: 'WAIT_UNTIL_SLEEP' }) }}>Aguardar até {formatClock(SLEEP_FROM)}</Button> : null}
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-2 rounded-3xl border border-border bg-card p-4">
-          <h2 className="font-display font-bold">Diário</h2>
-          {state.log.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Sua história começa agora.</p>
-          ) : (
-            <ol className="flex max-h-80 flex-col gap-2 overflow-y-auto pr-1">
-              {state.log.map((entry) => (
-                <li key={entry.id} className="flex gap-2 text-sm">
-                  <span
-                    className={cn(
-                      'mt-1.5 size-2 shrink-0 rounded-full',
-                      entry.tone === 'good' ? 'bg-accent' : entry.tone === 'bad' ? 'bg-destructive' : 'bg-muted-foreground/40',
-                    )}
-                    aria-hidden="true"
-                  />
-                  <span className="text-pretty">
-                    <span className="font-medium tabular-nums text-muted-foreground">
-                      {entry.age}a · {formatClock(entry.time)}
-                    </span>{' '}
-                    {entry.text}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          )}
-        </div>
       </aside>
     </div>
   )

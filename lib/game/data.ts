@@ -322,7 +322,17 @@ export const CATEGORY_ORDER: Category[] = [
   'noticias',
 ]
 
-export const REELS: Reel[] = [
+export const REEL_MEDIA: Record<Category, readonly [string, string]> = {
+  meme: ['/feed/meme-1.webp', '/feed/meme-2.webp'],
+  brainrot: ['/feed/brainrot-1.webp', '/feed/brainrot-2.webp'],
+  educativo: ['/feed/educativo-1.webp', '/feed/educativo-2.webp'],
+  amigos: ['/feed/amigos-1.webp', '/feed/amigos-2.webp'],
+  lifestyle: ['/feed/lifestyle-1.webp', '/feed/lifestyle-2.webp'],
+  fitness: ['/feed/fitness-1.webp', '/feed/fitness-2.webp'],
+  noticias: ['/feed/noticias-1.webp', '/feed/noticias-2.webp'],
+}
+
+const RAW_REELS: Omit<Reel, 'media'>[] = [
   { id: 'm1', category: 'meme', creator: '@memesdobr', caption: 'Quando a professora fala "é só uma pesquisinha" e são 40 páginas', likes: '1,2M' },
   { id: 'm2', category: 'meme', creator: '@gatoscaoticos', caption: 'Meu gato às 3 da manhã decidindo que é hora da corrida olímpica', likes: '890 mil' },
   { id: 'm3', category: 'meme', creator: '@tiozaodozap', caption: 'Bom dia! Já tomou seu café? (com 14 figurinhas de flor)', likes: '430 mil' },
@@ -353,6 +363,11 @@ export const REELS: Reel[] = [
   { id: 'n2', category: 'noticias', creator: '@jornal.digital', caption: 'Onda de calor bate recorde em várias capitais', likes: '240 mil' },
   { id: 'n3', category: 'noticias', creator: '@fato.ou.fake', caption: 'Checamos: aquela corrente do grupo da família é falsa', likes: '180 mil' },
 ]
+
+export const REELS: Reel[] = RAW_REELS.map((reel) => ({
+  ...reel,
+  media: Number(reel.id.slice(-1)) % 2 === 0 ? [...REEL_MEDIA[reel.category]].reverse() : [...REEL_MEDIA[reel.category]],
+}))
 
 export const EVENTS: GameEvent[] = [
   {

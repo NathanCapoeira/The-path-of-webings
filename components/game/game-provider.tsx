@@ -4,8 +4,10 @@ import { createContext, useContext, useEffect, useReducer, type Dispatch, type R
 import { createInitialState, gameReducer, type GameAction } from '@/lib/game/engine'
 import type { GameState } from '@/lib/game/types'
 import { normalizeAvatarConfig } from '@/lib/game/avatar'
+import { CATEGORY_ORDER, REELS } from '@/lib/game/data'
 
 const SAVE_KEY = 'the-path-of-webings:game:v1'
+const emptyCategoryCounts = () => Object.fromEntries(CATEGORY_ORDER.map((category) => [category, 0]))
 
 function isRestorableState(value: Partial<GameState> | null): value is GameState {
   return !!value &&
@@ -27,10 +29,14 @@ function restoredState(): GameState {
       ...candidate,
       avatar: normalizeAvatarConfig(candidate.avatar),
       avatarReaction: null,
+      currentReel: candidate.currentReel ? REELS.find((reel) => reel.id === candidate.currentReel?.id) ?? null : null,
       difficulty: ['normal', 'desafiador', 'intenso'].includes(candidate.difficulty ?? '') ? candidate.difficulty : 'normal',
       dailyActivityCounts: candidate.dailyActivityCounts ?? { exercicio: 0, estudar: 0, socializar: 0, criar: 0, descansar: 0 },
       dailyGainCounts: candidate.dailyGainCounts ?? {},
       lastActivityResult: candidate.lastActivityResult ?? null,
+      likesByCategory: candidate.likesByCategory ?? emptyCategoryCounts(),
+      notInterestedByCategory: candidate.notInterestedByCategory ?? emptyCategoryCounts(),
+      lastReadLogId: candidate.lastReadLogId ?? 0,
     } as GameState
   } catch {
     return createInitialState()

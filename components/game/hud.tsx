@@ -8,11 +8,12 @@ import { useGame } from './game-provider'
 import { MAIN_ICONS, SUB_ICONS } from './icons'
 import { StatBar } from './stat-bar'
 import { Avatar } from './avatar'
+import { DiaryButton } from './diary-panel'
 
 const MAIN_KEYS: MainKey[] = ['saude', 'disposicao', 'felicidade', 'dependencia']
 const SUB_KEYS: SubKey[] = ['foco', 'sanidade', 'forca', 'inteligencia']
 
-export function Hud({ previewActivityId = null }: { previewActivityId?: ActivityId | null }) {
+export function Hud({ previewActivityId = null, onOpenDiary }: { previewActivityId?: ActivityId | null; onOpenDiary: () => void }) {
   const { state, dispatch } = useGame()
   const subs = computeSubs(state.main, state.subBase)
   const phase = PHASES[state.phase]
@@ -37,6 +38,7 @@ export function Hud({ previewActivityId = null }: { previewActivityId?: Activity
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <DiaryButton onClick={onOpenDiary} />
           <div className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-sm font-medium">
             <Users className="size-4" aria-hidden="true" />
             <span className="tabular-nums">{state.followers.toLocaleString('pt-BR')}</span>
