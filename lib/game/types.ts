@@ -119,7 +119,7 @@ export interface YearSnapshot {
 export type DeathCause = 'saude' | 'exaustao' | 'felicidade' | 'velhice'
 
 export type Gender = 'mulher' | 'homem'
-export type HairStyle = 'curto' | 'cacheado' | 'longo' | 'trancado' | 'afro' | 'coques'
+export type HairStyle = 'raspado' | 'curto' | 'ondulado' | 'cacheado' | 'longo' | 'afro' | 'trancado' | 'locs' | 'coques' | 'rabo'
 export type Outfit = 'camiseta' | 'moletom' | 'camisa' | 'jaqueta'
 export type Expression = 'sorriso' | 'serio' | 'calmo'
 export type AvatarReaction = 'celebrate' | 'rest' | null

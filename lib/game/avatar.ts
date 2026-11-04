@@ -17,9 +17,13 @@ export const AVATAR_OPTIONS = {
   ],
   hairColor: [
     { value: '#201816', label: 'Preto' },
-    { value: '#5A3928', label: 'Castanho' },
+    { value: '#3B251D', label: 'Castanho escuro' },
+    { value: '#5A3928', label: 'Castanho médio' },
+    { value: '#8A5A3B', label: 'Castanho claro' },
     { value: '#B96232', label: 'Cobre' },
     { value: '#DEC06B', label: 'Dourado' },
+    { value: '#B5B7BC', label: 'Grisalho' },
+    { value: '#E6E2D8', label: 'Branco' },
   ],
   outfitColor: [
     { value: '#2463A4', label: 'Azul' },
@@ -30,10 +34,17 @@ export const AVATAR_OPTIONS = {
   ],
 } as const
 
-export const HAIR_STYLES: { value: HairStyle; label: string }[] = [
-  { value: 'curto', label: 'Curto' }, { value: 'cacheado', label: 'Cacheado' },
-  { value: 'longo', label: 'Longo' }, { value: 'trancado', label: 'Trançado' },
-  { value: 'afro', label: 'Afro' }, { value: 'coques', label: 'Coques' },
+export const HAIR_STYLES: { value: HairStyle; label: string; group: 'curto' | 'medio' | 'longo' | 'crespo' }[] = [
+  { value: 'raspado', label: 'Raspado', group: 'curto' },
+  { value: 'curto', label: 'Curto clássico', group: 'curto' },
+  { value: 'ondulado', label: 'Ondulado médio', group: 'medio' },
+  { value: 'cacheado', label: 'Cacheado médio', group: 'medio' },
+  { value: 'longo', label: 'Longo em camadas', group: 'longo' },
+  { value: 'rabo', label: 'Rabo de cavalo', group: 'longo' },
+  { value: 'afro', label: 'Black power', group: 'crespo' },
+  { value: 'trancado', label: 'Tranças', group: 'crespo' },
+  { value: 'locs', label: 'Locs', group: 'crespo' },
+  { value: 'coques', label: 'Coques', group: 'crespo' },
 ]
 
 export const EXPRESSIONS: { value: Expression; label: string }[] = [
