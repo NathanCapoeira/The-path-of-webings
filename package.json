@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test lib/game/avatar.test.mjs"
+    "test": "tsc --target ES2022 --module commonjs --moduleResolution node --esModuleInterop --skipLibCheck --outDir .test-build lib/game/engine.ts lib/game/data.ts lib/game/types.ts lib/game/avatar.ts && node --test lib/game/*.test.cjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

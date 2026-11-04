@@ -2,7 +2,7 @@
 
 import { useEffect, useEffectEvent, useRef } from 'react'
 import { ChevronDown, Clock, EyeOff, FastForward, Heart, MessageCircle, Share2, Users, X } from 'lucide-react'
-import { CATEGORIES, MAIN_LABELS, REELS_PER_SPEEDUP, SUB_LABELS } from '@/lib/game/data'
+import { CATEGORIES, MAIN_LABELS, MAX_SOCIAL_MINUTES_PER_SECOND, REELS_PER_SPEEDUP, SUB_LABELS } from '@/lib/game/data'
 import { feedShare, formatClock, minutesPerSecond } from '@/lib/game/engine'
 import type { MainKey, SubKey } from '@/lib/game/types'
 import { cn } from '@/lib/utils'
@@ -24,6 +24,7 @@ export function SocialScreen() {
   const reel = state.currentReel
   const rate = minutesPerSecond(state.reelsToday)
   const toNextSpeedup = REELS_PER_SPEEDUP - (state.reelsToday % REELS_PER_SPEEDUP)
+  const atMaximumSpeed = rate >= MAX_SOCIAL_MINUTES_PER_SECOND
   const lastWheel = useRef(0)
 
   useSocialClock(state.view === 'social' && !state.modal && !state.pendingEvent, () =>
@@ -170,7 +171,7 @@ export function SocialScreen() {
             <span className="font-display text-lg font-bold">1 segundo = {rate} min</span>
           </div>
           <p className="text-sm opacity-80 text-pretty">
-            O tempo acelera a cada {REELS_PER_SPEEDUP} vídeos. Faltam {toNextSpeedup} para dobrar.
+            {atMaximumSpeed ? 'Você atingiu a velocidade máxima do feed.' : `O tempo acelera a cada ${REELS_PER_SPEEDUP} vídeos. Faltam ${toNextSpeedup} para dobrar.`}
             Hoje você já viu {state.reelsToday} vídeos e gastou {Math.round(state.screenMinutesToday)} min.
           </p>
         </div>

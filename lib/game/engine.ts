@@ -7,6 +7,7 @@ import {
   DAY_START,
   EVENTS,
   MAX_AGE,
+  MAX_SOCIAL_MINUTES_PER_SECOND,
   PHASES,
   REELS,
   REELS_PER_SPEEDUP,
@@ -50,7 +51,7 @@ export function dependencyGainMultiplier(dependencia: number) {
 }
 
 export function minutesPerSecond(reelsToday: number) {
-  return Math.min(64, 2 ** Math.floor(reelsToday / REELS_PER_SPEEDUP))
+  return Math.min(MAX_SOCIAL_MINUTES_PER_SECOND, 2 ** Math.floor(reelsToday / REELS_PER_SPEEDUP))
 }
 
 export function formatClock(minutes: number) {
@@ -129,6 +130,7 @@ export function applyEffects(state: GameState, effects: Effects, opts: ApplyOpti
 }
 
 function advanceTime(state: GameState, minutes: number): GameState {
+  minutes = Math.min(minutes, Math.max(0, DAY_END - state.minutes))
   const hours = minutes / 60
   const dep = state.main.dependencia
   const main = { ...state.main }
@@ -320,7 +322,7 @@ export type GameAction =
   | { type: 'DISMISS_MODAL' }
   | { type: 'GO_TO_SLEEP' }
   | { type: 'CANCEL_SLEEP' }
-  | { type: 'CONFIRM_SLEEP'; optionIds: string[] }
+  | { type: 'CONFIRM_SLEEP'; optionId: string | null }
   | { type: 'CLEAR_AVATAR_REACTION' }
 
 function doActivity(state: GameState, id: ActivityId): GameState {
@@ -331,7 +333,7 @@ function doActivity(state: GameState, id: ActivityId): GameState {
     ...state,
     activityCounts: { ...state.activityCounts, [id]: state.activityCounts[id] + 1 },
   }
-  next = applyEffects(next, activity.effects, { fromActivity: true })
+  next = applyEffects(next, { ...activity.effects, minutes: activity.minutes }, { fromActivity: true })
   if (id === 'socializar' || id === 'criar') next = { ...next, avatarReaction: 'celebrate' }
   if (id === 'descansar') next = { ...next, avatarReaction: 'rest' }
 
@@ -395,13 +397,11 @@ function loadNextReel(state: GameState): GameState {
   }
 }
 
-function sleep(state: GameState, optionIds: string[]): GameState {
-  const options = SLEEP_OPTIONS.filter(
-    (o) => optionIds.includes(o.id) && o.phases.includes(state.phase),
-  )
+function sleep(state: GameState, optionId: string | null): GameState {
+  const option = SLEEP_OPTIONS.find((o) => o.id === optionId && o.phases.includes(state.phase))
   const sleepMinutes = state.forcedSleep ? 6 * 60 : clamp(DAY_END + DAY_START - state.minutes, 360, 720)
   const sleepHours = sleepMinutes / 60
-  const dispModifier = options.reduce((s, o) => s + (o.disposicaoGainModifier ?? 0), 0)
+  const dispModifier = option?.disposicaoGainModifier ?? 0
 
   let next: GameState = applyEffects(state, {
     main: {
@@ -410,7 +410,7 @@ function sleep(state: GameState, optionIds: string[]): GameState {
       felicidade: 10 - (state.forcedSleep ? 3 : 0),
     },
   })
-  for (const option of options) next = applyEffects(next, option.effects)
+  if (option) next = applyEffects(next, option.effects)
 
   const history = [...next.history, snapshot(next)]
   const prevPhase = state.phase
@@ -439,6 +439,7 @@ function sleep(state: GameState, optionIds: string[]): GameState {
     reelsToday: 0,
     screenMinutesToday: 0,
     currentReel: null,
+    lastReelEffects: null,
     challenge: scheduleChallenge(phase),
     modal: phase !== prevPhase ? { kind: 'phase', phase } : null,
     eventsSeen: phase !== prevPhase ? [] : next.eventsSeen,
@@ -472,7 +473,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'RESTART':
       return createInitialState()
     case 'DO_ACTIVITY':
-      if (state.status !== 'playing' || state.view !== 'life') return state
+      if (state.status !== 'playing' || state.view !== 'life' || state.modal || state.pendingEvent) return state
       return doActivity(state, action.id)
     case 'OPEN_SOCIAL': {
       if (state.status !== 'playing') return state
@@ -489,7 +490,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'SOCIAL_TICK': {
       if (state.status !== 'playing' || state.view !== 'social' || state.modal || state.pendingEvent)
         return state
-      const rate = minutesPerSecond(state.reelsToday)
+      const rate = Math.min(minutesPerSecond(state.reelsToday), Math.max(0, DAY_END - state.minutes))
       let next = advanceTime(state, rate)
       next = {
         ...next,
@@ -550,7 +551,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return { ...state, view: 'life' }
     case 'CONFIRM_SLEEP':
       if (state.status !== 'playing' || state.view !== 'sleep') return state
-      return sleep(state, action.optionIds)
+      return sleep(state, action.optionId)
     case 'CLEAR_AVATAR_REACTION':
       return { ...state, avatarReaction: null }
     default:

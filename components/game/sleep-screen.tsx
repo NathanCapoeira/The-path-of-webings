@@ -10,19 +10,10 @@ import { useGame } from './game-provider'
 
 export function SleepScreen() {
   const { state, dispatch } = useGame()
-  const [selected, setSelected] = useState<string[]>([])
+  const [selected, setSelected] = useState<string | null>(null)
   const options = SLEEP_OPTIONS.filter((o) => o.phases.includes(state.phase))
   const sleepHours = state.forcedSleep ? 6 : clamp(DAY_END + DAY_START - state.minutes, 360, 720) / 60
   const years = PHASES[state.phase].yearsPerSleep
-
-  const toggle = (id: string) => {
-    const option = SLEEP_OPTIONS.find((o) => o.id === id)!
-    setSelected((prev) =>
-      prev.includes(id)
-        ? prev.filter((x) => x !== id)
-        : [...prev.filter((x) => !option.conflictsWith?.includes(x)), id],
-    )
-  }
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 rounded-[2rem] bg-foreground p-6 text-background md:p-8">
@@ -49,16 +40,18 @@ export function SleepScreen() {
 
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-2 text-sm font-medium text-background/70">
-          O que você faz antes de dormir? Isso afeta os ganhos do dia seguinte.
+          Escolha até uma ação antes de dormir. Ela afeta os ganhos do dia seguinte.
         </legend>
         {options.map((option) => {
-          const active = selected.includes(option.id)
+          const active = selected === option.id
           return (
             <button
               key={option.id}
               type="button"
               aria-pressed={active}
-              onClick={() => toggle(option.id)}
+              aria-label={option.name}
+              aria-describedby={`sleep-description-${option.id}`}
+              onClick={() => setSelected(active ? null : option.id)}
               className={cn(
                 'flex items-center gap-3 rounded-2xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                 active ? 'border-primary bg-primary/20' : 'border-background/15 hover:bg-background/5',
@@ -75,7 +68,7 @@ export function SleepScreen() {
               </span>
               <span className="flex flex-col">
                 <span className="font-medium">{option.name}</span>
-                <span className="text-xs text-background/60">{option.description}</span>
+                <span id={`sleep-description-${option.id}`} className="text-xs text-background/60">{option.description}</span>
               </span>
             </button>
           )
@@ -86,7 +79,7 @@ export function SleepScreen() {
         <Button
           size="lg"
           className="h-12 flex-1 rounded-2xl text-base"
-          onClick={() => dispatch({ type: 'CONFIRM_SLEEP', optionIds: selected })}
+          onClick={() => dispatch({ type: 'CONFIRM_SLEEP', optionId: selected })}
         >
           Dormir
         </Button>

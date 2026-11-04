@@ -16,6 +16,7 @@ export const DAY_START = 7 * 60
 export const DAY_END = 24 * 60
 export const SLEEP_FROM = 19 * 60
 export const REELS_PER_SPEEDUP = 4
+export const MAX_SOCIAL_MINUTES_PER_SECOND = 64
 export const MAX_AGE = 100
 
 export const PHASES: Phase[] = [
@@ -172,12 +173,13 @@ export const ACTIVITIES: Activity[] = [
   {
     id: 'descansar',
     name: 'Descansar',
-    description: 'Um cochilo ou um tempo de silêncio. Recupera Disposição.',
+    description: 'Uma pausa sem telas. Recupera Disposição, Foco e Sanidade e reduz a Dependência.',
     minutes: 60,
     minPhase: 0,
     requirements: () => ({}),
     effects: {
-      main: { disposicao: 8, felicidade: 1 },
+      main: { disposicao: 8, felicidade: 1, dependencia: -8 },
+      sub: { foco: 3, sanidade: 3 },
     },
   },
 ]
