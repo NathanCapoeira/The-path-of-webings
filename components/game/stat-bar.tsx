@@ -40,7 +40,7 @@ export function StatBar({ label, value, max = 100, icon: Icon, inverted, compact
         aria-label={label}
         aria-valuenow={Math.round(value)}
         aria-valuemin={0}
-        aria-valuemax={100}
+        aria-valuemax={Math.max(max, Math.ceil(value))}
       >
         {max < 100 ? (
           <div

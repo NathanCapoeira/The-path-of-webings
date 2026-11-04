@@ -41,10 +41,10 @@ export function maxHealthForAge(age: number) {
 export function computeSubs(main: MainStats, base: SubStats): SubStats {
   const { saude, disposicao, felicidade, dependencia } = main
   return {
-    foco: clamp(base.foco + (disposicao - 50) * 0.3 - dependencia * 0.3),
-    sanidade: clamp(base.sanidade + (felicidade - 50) * 0.3 - dependencia * 0.3),
-    forca: clamp(base.forca + (saude - 50) * 0.25 + (disposicao - 50) * 0.15),
-    inteligencia: clamp(base.inteligencia - dependencia * 0.3),
+    foco: Math.max(0, base.foco + (disposicao - 50) * 0.3 - dependencia * 0.3),
+    sanidade: Math.max(0, base.sanidade + (felicidade - 50) * 0.3 - dependencia * 0.3),
+    forca: Math.max(0, base.forca + (saude - 50) * 0.25 + (disposicao - 50) * 0.15),
+    inteligencia: Math.max(0, base.inteligencia - dependencia * 0.3),
   }
 }
 
@@ -105,10 +105,10 @@ function clampState(state: GameState): GameState {
       dependencia: clamp(state.main.dependencia),
     },
     subBase: {
-      foco: clamp(state.subBase.foco),
-      sanidade: clamp(state.subBase.sanidade),
-      forca: clamp(state.subBase.forca),
-      inteligencia: clamp(state.subBase.inteligencia),
+      foco: Math.max(0, state.subBase.foco),
+      sanidade: Math.max(0, state.subBase.sanidade),
+      forca: Math.max(0, state.subBase.forca),
+      inteligencia: Math.max(0, state.subBase.inteligencia),
     },
     followers: Math.max(0, Math.round(state.followers)),
   }

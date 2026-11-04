@@ -19,7 +19,7 @@ function GameView() {
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col gap-4 px-3 py-4 md:px-6 md:py-6">
-      <Hud />
+      {state.view !== 'social' ? <Hud /> : null}
       {state.view === 'life' ? <LifeScreen /> : null}
       {state.view === 'social' ? <SocialScreen /> : null}
       {state.view === 'sleep' ? <SleepScreen /> : null}
