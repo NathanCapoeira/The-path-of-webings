@@ -52,9 +52,6 @@ export function StartScreen() {
           Viva no corpo de alguém que cresce totalmente conectado. Do primeiro tablet à terceira idade,
           tente chegar o mais longe possível equilibrando saúde, felicidade, vida social e sua relação com as redes.
         </p>
-        <Button size="lg" className="h-12 w-fit rounded-2xl px-6 text-base" onClick={() => setCreating(true)}>
-          Iniciar vida
-        </Button>
       </section>
 
       <section aria-label="Como jogar" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -78,6 +75,12 @@ export function StartScreen() {
           ))}
         </ol>
       </section>
+
+      <div className="flex justify-center pb-[max(0px,env(safe-area-inset-bottom))]">
+        <Button size="lg" className="h-12 w-full max-w-xs rounded-2xl px-6 text-base sm:w-auto sm:min-w-56" onClick={() => setCreating(true)}>
+          Iniciar vida
+        </Button>
+      </div>
     </main>
   )
 }

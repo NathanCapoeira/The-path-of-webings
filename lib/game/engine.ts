@@ -89,6 +89,14 @@ export function activityRequirementChecks(state: GameState, id: ActivityId) {
   }))
 }
 
+export function canPerformAnyActivity(state: GameState) {
+  return ACTIVITIES.some((activity) =>
+    isActivityAvailable(state, activity.id) &&
+    !activityLimitReached(state, activity.id) &&
+    activityRequirementChecks(state, activity.id).every((check) => check.ok),
+  )
+}
+
 function addLog(state: GameState, text: string, tone: LogTone = 'neutral'): GameState {
   const entry = { id: state.logCounter + 1, age: state.age, time: state.minutes, text, tone }
   return { ...state, logCounter: entry.id, log: [entry, ...state.log].slice(0, 40) }
@@ -328,6 +336,7 @@ export type GameAction =
   | { type: 'START'; name: string; avatar: AvatarConfig }
   | { type: 'RESTART' }
   | { type: 'DO_ACTIVITY'; id: ActivityId }
+  | { type: 'WAIT_UNTIL_SLEEP' }
   | { type: 'OPEN_SOCIAL' }
   | { type: 'CLOSE_SOCIAL' }
   | { type: 'SOCIAL_TICK' }
@@ -518,6 +527,12 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'DO_ACTIVITY':
       if (state.status !== 'playing' || state.view !== 'life' || state.modal || state.pendingEvent) return state
       return doActivity(state, action.id)
+    case 'WAIT_UNTIL_SLEEP': {
+      if (state.status !== 'playing' || state.view !== 'life' || state.modal || state.pendingEvent || state.minutes >= SLEEP_FROM || canPerformAnyActivity(state)) return state
+      let next = advanceTime({ ...state, lastActivityResult: null }, SLEEP_FROM - state.minutes)
+      next = addLog(next, `Você aguardou até ${formatClock(SLEEP_FROM)} sem receber recompensas.`, 'neutral')
+      return finalize(next)
+    }
     case 'OPEN_SOCIAL': {
       if (state.status !== 'playing' || state.view !== 'life' || state.modal || state.pendingEvent) return state
       const next = { ...state, view: 'social' as const }

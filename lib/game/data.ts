@@ -147,7 +147,7 @@ export const ACTIVITIES: Activity[] = [
       main: { disposicao: -6, felicidade: -2 },
       sub: { inteligencia: 5, foco: 2 },
     },
-    dailyLimit: 4,
+    dailyLimit: 3,
   },
   {
     id: 'socializar',
@@ -160,7 +160,7 @@ export const ACTIVITIES: Activity[] = [
       main: { felicidade: 11, dependencia: -7, disposicao: -4 },
       sub: { sanidade: 4 },
     },
-    dailyLimit: 4,
+    dailyLimit: 3,
   },
   {
     id: 'criar',
@@ -173,7 +173,7 @@ export const ACTIVITIES: Activity[] = [
       main: { felicidade: 4, dependencia: 4, disposicao: -5 },
       sub: { foco: 1 },
     },
-    dailyLimit: 4,
+    dailyLimit: 3,
   },
   {
     id: 'descansar',
@@ -186,6 +186,7 @@ export const ACTIVITIES: Activity[] = [
       main: { disposicao: 8, felicidade: 1, dependencia: -8 },
       sub: { foco: 3, sanidade: 3 },
     },
+    dailyLimit: 6,
   },
 ]
 

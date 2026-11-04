@@ -6,6 +6,7 @@ import { ACTIVITIES, CHALLENGES, MAIN_LABELS, PHASES, SLEEP_FROM, SUB_LABELS } f
 import {
   activityLimitReached,
   activityRequirementChecks,
+  canPerformAnyActivity,
   computeSubs,
   dependencyGainMultiplier,
   formatClock,
@@ -26,6 +27,7 @@ export function LifeScreen() {
   const subs = computeSubs(state.main, state.subBase)
   const mult = dependencyGainMultiplier(state.main.dependencia)
   const canSleep = state.minutes >= SLEEP_FROM
+  const canDoActivity = canPerformAnyActivity(state)
   const scheduled = state.challenge ? CHALLENGES.find((c) => c.id === state.challenge!.id) : null
 
   return (
@@ -169,6 +171,7 @@ export function LifeScreen() {
           >
             {canSleep ? 'Ir para a cama' : `Disponível a partir das ${formatClock(SLEEP_FROM)}`}
           </Button>
+          {!canSleep && !canDoActivity ? <Button variant="outline" className="h-11 rounded-2xl" onClick={() => dispatch({ type: 'WAIT_UNTIL_SLEEP' })}>Aguardar até {formatClock(SLEEP_FROM)}</Button> : null}
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col gap-2 rounded-3xl border border-border bg-card p-4">
