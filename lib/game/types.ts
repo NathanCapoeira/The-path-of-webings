@@ -3,6 +3,7 @@ export type SubKey = 'foco' | 'sanidade' | 'forca' | 'inteligencia'
 
 export type MainStats = Record<MainKey, number>
 export type SubStats = Record<SubKey, number>
+export type GainKey = MainKey | SubKey
 
 export interface Effects {
   main?: Partial<MainStats>
@@ -39,6 +40,13 @@ export interface Activity {
   minPhase: number
   requirements: (phase: number) => Partial<SubStats>
   effects: Effects
+  dailyLimit?: number
+}
+
+export interface ActivityResult {
+  id: ActivityId
+  gains: Partial<Record<GainKey, number>>
+  reduced: boolean
 }
 
 export type ChallengeId = 'prova' | 'apresentacao' | 'entrevista' | 'campeonato'
@@ -139,7 +147,7 @@ export type Modal =
   | { kind: 'info'; title: string; text: string }
 
 export interface GameState {
-  status: 'start' | 'playing' | 'dead'
+  status: 'start' | 'playing' | 'paused' | 'dead'
   view: 'life' | 'social' | 'sleep'
   name: string
   avatar: AvatarConfig
@@ -163,6 +171,9 @@ export interface GameState {
   challengesPassed: number
   challengesFailed: number
   activityCounts: Record<ActivityId, number>
+  dailyActivityCounts: Record<ActivityId, number>
+  dailyGainCounts: Partial<Record<GainKey, number>>
+  lastActivityResult: ActivityResult | null
   pendingEvent: GameEvent | null
   eventsSeen: string[]
   modal: Modal | null

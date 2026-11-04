@@ -9,7 +9,7 @@ const SAVE_KEY = 'the-path-of-webings:game:v1'
 
 function isRestorableState(value: Partial<GameState> | null): value is GameState {
   return !!value &&
-    ['start', 'playing', 'dead'].includes(value.status ?? '') &&
+    ['start', 'playing', 'paused', 'dead'].includes(value.status ?? '') &&
     typeof value.name === 'string' &&
     typeof value.age === 'number' &&
     typeof value.phase === 'number' &&
@@ -23,7 +23,14 @@ function restoredState(): GameState {
   try {
     const candidate = JSON.parse(window.localStorage.getItem(SAVE_KEY) ?? 'null') as Partial<GameState> | null
     if (!isRestorableState(candidate)) return createInitialState()
-    return { ...candidate, avatar: normalizeAvatarConfig(candidate.avatar), avatarReaction: null } as GameState
+    return {
+      ...candidate,
+      avatar: normalizeAvatarConfig(candidate.avatar),
+      avatarReaction: null,
+      dailyActivityCounts: candidate.dailyActivityCounts ?? { exercicio: 0, estudar: 0, socializar: 0, criar: 0, descansar: 0 },
+      dailyGainCounts: candidate.dailyGainCounts ?? {},
+      lastActivityResult: candidate.lastActivityResult ?? null,
+    } as GameState
   } catch {
     return createInitialState()
   }

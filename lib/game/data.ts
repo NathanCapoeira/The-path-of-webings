@@ -18,6 +18,7 @@ export const SLEEP_FROM = 19 * 60
 export const REELS_PER_SPEEDUP = 4
 export const MAX_SOCIAL_MINUTES_PER_SECOND = 64
 export const MAX_AGE = 100
+export const DIMINISHING_RETURNS = [1, 1, 0.75, 0.6, 0.4, 0.25, 0.1, 0] as const
 
 export const PHASES: Phase[] = [
   {
@@ -133,6 +134,7 @@ export const ACTIVITIES: Activity[] = [
       main: { saude: 9, disposicao: -7, felicidade: 3 },
       sub: { forca: 4, foco: 1 },
     },
+    dailyLimit: 3,
   },
   {
     id: 'estudar',
@@ -145,6 +147,7 @@ export const ACTIVITIES: Activity[] = [
       main: { disposicao: -6, felicidade: -2 },
       sub: { inteligencia: 5, foco: 2 },
     },
+    dailyLimit: 4,
   },
   {
     id: 'socializar',
@@ -157,6 +160,7 @@ export const ACTIVITIES: Activity[] = [
       main: { felicidade: 11, dependencia: -7, disposicao: -4 },
       sub: { sanidade: 4 },
     },
+    dailyLimit: 4,
   },
   {
     id: 'criar',
@@ -169,6 +173,7 @@ export const ACTIVITIES: Activity[] = [
       main: { felicidade: 4, dependencia: 4, disposicao: -5 },
       sub: { foco: 1 },
     },
+    dailyLimit: 4,
   },
   {
     id: 'descansar',

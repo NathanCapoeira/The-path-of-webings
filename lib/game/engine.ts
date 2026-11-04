@@ -14,6 +14,7 @@ import {
   SLEEP_FROM,
   SLEEP_OPTIONS,
   DEFAULT_AVATAR,
+  DIMINISHING_RETURNS,
   challengeThreshold,
   phaseForAge,
 } from './data'
@@ -28,6 +29,7 @@ import type {
   SubKey,
   SubStats,
   AvatarConfig,
+  GainKey,
 } from './types'
 
 export const clamp = (v: number, min = 0, max = 100) => Math.min(max, Math.max(min, v))
@@ -64,6 +66,15 @@ export function formatClock(minutes: number) {
 export function isActivityAvailable(state: GameState, id: ActivityId) {
   const activity = ACTIVITIES.find((a) => a.id === id)
   return !!activity && state.phase >= activity.minPhase
+}
+
+export function activityLimitReached(state: GameState, id: ActivityId) {
+  const activity = ACTIVITIES.find((item) => item.id === id)
+  return !!activity?.dailyLimit && (state.dailyActivityCounts[id] ?? 0) >= activity.dailyLimit
+}
+
+export function gainMultiplierForOccurrence(occurrence: number) {
+  return DIMINISHING_RETURNS[Math.min(Math.max(occurrence, 1), DIMINISHING_RETURNS.length) - 1]
 }
 
 export function activityRequirementChecks(state: GameState, id: ActivityId) {
@@ -268,6 +279,8 @@ export function feedShare(weights: Record<Category, number>) {
 
 const emptyCategoryCounts = () =>
   Object.fromEntries(CATEGORY_ORDER.map((c) => [c, 0])) as Record<Category, number>
+const emptyActivityCounts = () =>
+  ({ exercicio: 0, estudar: 0, socializar: 0, criar: 0, descansar: 0 })
 
 export function createInitialState(name = '', avatar: AvatarConfig = DEFAULT_AVATAR): GameState {
   return {
@@ -296,7 +309,10 @@ export function createInitialState(name = '', avatar: AvatarConfig = DEFAULT_AVA
     challenge: null,
     challengesPassed: 0,
     challengesFailed: 0,
-    activityCounts: { exercicio: 0, estudar: 0, socializar: 0, criar: 0, descansar: 0 },
+    activityCounts: emptyActivityCounts(),
+    dailyActivityCounts: emptyActivityCounts(),
+    dailyGainCounts: {},
+    lastActivityResult: null,
     pendingEvent: null,
     eventsSeen: [],
     modal: name ? { kind: 'phase', phase: 0 } : null,
@@ -324,16 +340,40 @@ export type GameAction =
   | { type: 'CANCEL_SLEEP' }
   | { type: 'CONFIRM_SLEEP'; optionId: string | null }
   | { type: 'CLEAR_AVATAR_REACTION' }
+  | { type: 'EXIT_TO_MENU' }
+  | { type: 'CONTINUE_GAME' }
 
 function doActivity(state: GameState, id: ActivityId): GameState {
   if (!isActivityAvailable(state, id)) return state
+  if (activityLimitReached(state, id)) return state
   if (!activityRequirementChecks(state, id).every((c) => c.ok)) return state
   const activity = ACTIVITIES.find((a) => a.id === id)!
+  const dailyGainCounts = { ...state.dailyGainCounts }
+  const scaledMain = { ...activity.effects.main }
+  const scaledSub = { ...activity.effects.sub }
+  let reduced = false
+  for (const [key, value] of [...Object.entries(scaledMain), ...Object.entries(scaledSub)] as [GainKey, number][]) {
+    if (value <= 0) continue
+    const occurrence = (dailyGainCounts[key] ?? 0) + 1
+    const multiplier = gainMultiplierForOccurrence(occurrence)
+    if (multiplier < 1) reduced = true
+    if (key in scaledMain) scaledMain[key as MainKey] = value * multiplier
+    else scaledSub[key as SubKey] = value * multiplier
+    dailyGainCounts[key] = occurrence
+  }
   let next: GameState = {
     ...state,
     activityCounts: { ...state.activityCounts, [id]: state.activityCounts[id] + 1 },
+    dailyActivityCounts: { ...state.dailyActivityCounts, [id]: state.dailyActivityCounts[id] + 1 },
+    dailyGainCounts,
   }
-  next = applyEffects(next, { ...activity.effects, minutes: activity.minutes }, { fromActivity: true })
+  const beforeMain = { ...next.main }
+  const beforeSub = { ...next.subBase }
+  next = applyEffects(next, { ...activity.effects, main: scaledMain, sub: scaledSub, minutes: activity.minutes }, { fromActivity: true })
+  const gains = {} as Partial<Record<GainKey, number>>
+  for (const key of Object.keys(scaledMain) as MainKey[]) if ((activity.effects.main?.[key] ?? 0) > 0) gains[key] = next.main[key] - beforeMain[key]
+  for (const key of Object.keys(scaledSub) as SubKey[]) if ((activity.effects.sub?.[key] ?? 0) > 0) gains[key] = next.subBase[key] - beforeSub[key]
+  next = { ...next, lastActivityResult: { id, gains, reduced } }
   if (id === 'socializar' || id === 'criar') next = { ...next, avatarReaction: 'celebrate' }
   if (id === 'descansar') next = { ...next, avatarReaction: 'rest' }
 
@@ -440,6 +480,9 @@ function sleep(state: GameState, optionId: string | null): GameState {
     screenMinutesToday: 0,
     currentReel: null,
     lastReelEffects: null,
+    dailyActivityCounts: emptyActivityCounts(),
+    dailyGainCounts: {},
+    lastActivityResult: null,
     challenge: scheduleChallenge(phase),
     modal: phase !== prevPhase ? { kind: 'phase', phase } : null,
     eventsSeen: phase !== prevPhase ? [] : next.eventsSeen,
@@ -476,7 +519,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (state.status !== 'playing' || state.view !== 'life' || state.modal || state.pendingEvent) return state
       return doActivity(state, action.id)
     case 'OPEN_SOCIAL': {
-      if (state.status !== 'playing') return state
+      if (state.status !== 'playing' || state.view !== 'life' || state.modal || state.pendingEvent) return state
       const next = { ...state, view: 'social' as const }
       return next.currentReel ? next : loadNextReel(next)
     }
@@ -501,12 +544,12 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return finalize(next)
     }
     case 'NEXT_REEL': {
-      if (state.status !== 'playing' || state.view !== 'social') return state
+      if (state.status !== 'playing' || state.view !== 'social' || state.modal || state.pendingEvent) return state
       const next = loadNextReel(applyReel(state))
       return finalize(next)
     }
     case 'LIKE_REEL': {
-      if (!state.currentReel || state.currentReelLiked) return state
+      if (state.status !== 'playing' || state.view !== 'social' || state.modal || state.pendingEvent || !state.currentReel || state.currentReelLiked) return state
       const category = state.currentReel.category
       const next = applyEffects(state, { main: { felicidade: 0.5, dependencia: 0.5 } })
       return {
@@ -519,7 +562,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       }
     }
     case 'NOT_INTERESTED': {
-      if (!state.currentReel) return state
+      if (state.status !== 'playing' || state.view !== 'social' || state.modal || state.pendingEvent || !state.currentReel) return state
       const category = state.currentReel.category
       const next: GameState = {
         ...state,
@@ -544,7 +587,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'DISMISS_MODAL':
       return { ...state, modal: null }
     case 'GO_TO_SLEEP':
-      if (state.status !== 'playing' || state.minutes < SLEEP_FROM) return state
+      if (state.status !== 'playing' || state.view !== 'life' || state.modal || state.pendingEvent || state.minutes < SLEEP_FROM) return state
       return { ...state, view: 'sleep' }
     case 'CANCEL_SLEEP':
       if (state.forcedSleep) return state
@@ -554,6 +597,12 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return sleep(state, action.optionId)
     case 'CLEAR_AVATAR_REACTION':
       return { ...state, avatarReaction: null }
+    case 'EXIT_TO_MENU':
+      if (state.status !== 'playing') return state
+      return { ...state, status: 'paused', view: 'life', modal: null, pendingEvent: null }
+    case 'CONTINUE_GAME':
+      if (state.status !== 'paused') return state
+      return { ...state, status: 'playing' }
     default:
       return state
   }

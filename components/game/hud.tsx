@@ -1,6 +1,6 @@
 'use client'
 
-import { Clock, Users } from 'lucide-react'
+import { Clock, LogOut, Users } from 'lucide-react'
 import { MAIN_LABELS, PHASES, SUB_LABELS, DAY_END, DAY_START } from '@/lib/game/data'
 import { computeSubs, formatClock, maxHealthForAge } from '@/lib/game/engine'
 import type { MainKey, SubKey } from '@/lib/game/types'
@@ -13,7 +13,7 @@ const MAIN_KEYS: MainKey[] = ['saude', 'disposicao', 'felicidade', 'dependencia'
 const SUB_KEYS: SubKey[] = ['foco', 'sanidade', 'forca', 'inteligencia']
 
 export function Hud() {
-  const { state } = useGame()
+  const { state, dispatch } = useGame()
   const subs = computeSubs(state.main, state.subBase)
   const phase = PHASES[state.phase]
   const dayProgress = ((state.minutes - DAY_START) / (DAY_END - DAY_START)) * 100
@@ -45,6 +45,7 @@ export function Hud() {
             <Clock className="size-4" aria-hidden="true" />
             <span className="font-display tabular-nums">{formatClock(state.minutes)}</span>
           </div>
+          <button type="button" aria-label="Sair da partida" title="Sair da partida" onClick={() => { if (window.confirm('Sair para o menu? Seu progresso já está salvo.')) dispatch({ type: 'EXIT_TO_MENU' }) }} className="flex size-9 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition hover:text-foreground focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/40"><LogOut className="size-4" aria-hidden="true" /></button>
         </div>
       </div>
 

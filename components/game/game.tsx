@@ -8,11 +8,13 @@ import { LifeScreen } from './life-screen'
 import { SleepScreen } from './sleep-screen'
 import { SocialScreen } from './social-screen'
 import { StartScreen } from './start-screen'
+import { PauseScreen } from './pause-screen'
 
 function GameView() {
   const { state } = useGame()
 
   if (state.status === 'start') return <StartScreen />
+  if (state.status === 'paused') return <PauseScreen />
   if (state.status === 'dead') return <DeathScreen />
 
   return (

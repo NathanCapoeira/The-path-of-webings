@@ -2,8 +2,9 @@
 
 import { AlertTriangle, Check, Lock, Moon, Smartphone, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { ACTIVITIES, CHALLENGES, PHASES, SLEEP_FROM, SUB_LABELS } from '@/lib/game/data'
+import { ACTIVITIES, CHALLENGES, MAIN_LABELS, PHASES, SLEEP_FROM, SUB_LABELS } from '@/lib/game/data'
 import {
+  activityLimitReached,
   activityRequirementChecks,
   computeSubs,
   dependencyGainMultiplier,
@@ -30,6 +31,7 @@ export function LifeScreen() {
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
       <div className="flex flex-col gap-4">
+        {state.lastActivityResult ? <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-accent/30 bg-accent/10 px-4 py-3 text-sm" role="status"><span className="font-semibold">Resultado:</span>{Object.entries(state.lastActivityResult.gains).map(([key, value]) => <span key={key} className="rounded-full bg-card px-2 py-1 font-medium">+{Number(value.toFixed(1))} {MAIN_LABELS[key as keyof typeof MAIN_LABELS] ?? SUB_LABELS[key as keyof typeof SUB_LABELS]}</span>)}{state.lastActivityResult.reduced ? <span className="text-muted-foreground">Rendimento reduzido por repetição.</span> : null}</div> : null}
         {scheduled && state.challenge ? (
           <div
             className="flex flex-wrap items-center gap-3 rounded-3xl border-2 border-dashed border-primary bg-primary/10 p-4"
@@ -87,8 +89,9 @@ export function LifeScreen() {
             {ACTIVITIES.map((activity) => {
               const Icon = ACTIVITY_ICONS[activity.id]
               const available = isActivityAvailable(state, activity.id)
+              const limitReached = activityLimitReached(state, activity.id)
               const checks = available ? activityRequirementChecks(state, activity.id) : []
-              const ok = available && checks.every((c) => c.ok)
+              const ok = available && !limitReached && checks.every((c) => c.ok)
               return (
                 <button
                   key={activity.id}
@@ -123,7 +126,7 @@ export function LifeScreen() {
                     <span className="text-xs font-medium text-muted-foreground">
                       Libera em: {PHASES[activity.minPhase].name}
                     </span>
-                  ) : checks.length > 0 ? (
+                  ) : limitReached ? <span className="text-xs font-medium text-destructive">Limite diário atingido ({activity.dailyLimit}x). Tente outra atividade.</span> : checks.length > 0 ? (
                     <ul className="flex flex-wrap gap-1.5" aria-label="Requisitos">
                       {checks.map((c) => (
                         <li
@@ -139,7 +142,7 @@ export function LifeScreen() {
                       ))}
                     </ul>
                   ) : (
-                    <span className="text-xs text-muted-foreground">Sem requisitos</span>
+                    <span className="text-xs text-muted-foreground">Sem requisitos{activity.dailyLimit ? ` · ${state.dailyActivityCounts[activity.id]}/${activity.dailyLimit} hoje` : ' · ganhos diminuem com repetição'}</span>
                   )}
                 </button>
               )
