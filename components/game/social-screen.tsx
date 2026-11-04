@@ -71,9 +71,10 @@ export function SocialScreen() {
             <VideoAction label="Próximo vídeo" onClick={next}><ChevronUp className="size-6" /></VideoAction>
           </nav>
 
-          <div className="absolute bottom-5 left-4 right-20 z-20 flex flex-col gap-3 pb-[env(safe-area-inset-bottom)]">
+          <div className="absolute bottom-5 left-4 right-20 z-20 flex flex-col gap-2 pb-[env(safe-area-inset-bottom)] drop-shadow-md">
+            <p className="text-xs font-bold uppercase tracking-[.14em] text-white/85">Tema: {CATEGORIES[reel.category].label}</p>
+            <div className="flex items-center gap-2"><span className={cn('flex size-9 items-center justify-center rounded-full border border-white/30', style?.chip)}><CatIcon className="size-4" aria-hidden="true" /></span><span className="text-sm font-bold">{reel.creator}</span></div>
             <p className="font-display text-lg font-bold leading-snug text-balance">{reel.caption}</p>
-            <div className="flex items-center gap-2"><span className={cn('flex size-9 items-center justify-center rounded-full border border-white/30', style?.chip)}><CatIcon className="size-4" aria-hidden="true" /></span><div className="flex flex-col"><span className="text-sm font-bold">{reel.creator}</span><span className="text-xs text-white/70">{CATEGORIES[reel.category].label}</span></div></div>
             <button type="button" onClick={() => dispatch({ type: 'NOT_INTERESTED' })} className="flex w-fit items-center gap-1.5 rounded-full bg-black/35 px-3 py-1.5 text-xs font-medium backdrop-blur transition hover:bg-black/55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><EyeOff className="size-3.5" aria-hidden="true" />Não tenho interesse</button>
           </div>
 

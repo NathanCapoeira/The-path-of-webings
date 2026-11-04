@@ -56,35 +56,25 @@ export function Hud() {
         />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-[1.4fr_1fr]">
-        <section aria-label="Atributos principais" className="grid grid-cols-2 gap-x-4 gap-y-3">
-          {MAIN_KEYS.map((key) => (
-            <StatBar
-              key={key}
-              label={MAIN_LABELS[key]}
-              value={state.main[key]}
-              max={key === 'saude' ? maxHealthForAge(state.age) : 100}
-              icon={MAIN_ICONS[key]}
-              inverted={key === 'dependencia'}
-            />
-          ))}
-        </section>
-        <section
-          aria-label="Sub atributos"
-          className="grid grid-cols-4 gap-2 border-t border-border pt-3 md:border-t-0 md:border-l md:pt-0 md:pl-4"
-        >
-          {SUB_KEYS.map((key) => {
-            const Icon = SUB_ICONS[key]
+      <div className="grid gap-4 md:grid-cols-[1fr_1.4fr]">
+        <section aria-label="Atributos principais" className="grid grid-cols-2 gap-2 min-[380px]:grid-cols-4">
+          {MAIN_KEYS.map((key) => {
+            const Icon = MAIN_ICONS[key]
+            const max = key === 'saude' ? maxHealthForAge(state.age) : 100
             return (
               <div key={key} className="flex flex-col items-center justify-center gap-1 rounded-2xl bg-secondary py-2">
                 <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
-                <span className="font-display text-lg font-bold tabular-nums leading-none">
-                  {Math.round(subs[key])}
-                </span>
-                <span className="text-[11px] text-muted-foreground">{SUB_LABELS[key]}</span>
+                <span className="font-display text-lg font-bold tabular-nums leading-none">{Math.round(state.main[key])}{max < 100 ? <span className="text-xs text-muted-foreground">/{Math.round(max)}</span> : null}</span>
+                <span className="text-[11px] text-muted-foreground">{MAIN_LABELS[key]}</span>
               </div>
             )
           })}
+        </section>
+        <section
+          aria-label="Sub atributos"
+          className="grid grid-cols-2 gap-x-4 gap-y-3 border-t border-border pt-3 md:border-t-0 md:border-l md:pt-0 md:pl-4"
+        >
+          {SUB_KEYS.map((key) => <StatBar key={key} label={SUB_LABELS[key]} value={subs[key]} icon={SUB_ICONS[key]} />)}
         </section>
       </div>
     </header>
