@@ -182,12 +182,13 @@ export const ACTIVITIES: Activity[] = [
   {
     id: 'descansar',
     name: 'Descansar',
-    description: 'Um cochilo ou um tempo de silêncio. Recupera Disposição.',
+    description: 'Uma pausa sem telas. Recupera Disposição, Foco e Sanidade e reduz a Dependência.',
     minutes: 60,
     minPhase: 0,
     requirements: () => ({}),
     effects: {
-      main: { disposicao: 8, felicidade: 1 },
+      main: { disposicao: 8, felicidade: 1, dependencia: -8 },
+      sub: { foco: 3, sanidade: 3 },
     },
   },
 ]
@@ -492,7 +493,6 @@ export const SLEEP_OPTIONS: SleepOption[] = [
     name: 'Ouvir canção de ninar',
     description: '+Felicidade e +Disposição',
     phases: [0, 1],
-    conflictsWith: ['tablet'],
     effects: { main: { felicidade: 4, disposicao: 4 } },
   },
   {
@@ -500,7 +500,6 @@ export const SLEEP_OPTIONS: SleepOption[] = [
     name: 'Dormir com o tablet',
     description: '+Felicidade, −Disposição, +Dependência',
     phases: [0, 1],
-    conflictsWith: ['cancao'],
     effects: { main: { felicidade: 6, dependencia: 5 } },
     disposicaoGainModifier: -12,
   },
@@ -509,7 +508,6 @@ export const SLEEP_OPTIONS: SleepOption[] = [
     name: 'Rolar o feed na cama',
     description: '++Felicidade, −−Disposição, +Dependência',
     phases: [2, 3, 4, 5, 6, 7],
-    conflictsWith: ['celular-fora'],
     effects: { main: { felicidade: 9, dependencia: 6 } },
     disposicaoGainModifier: -18,
   },
@@ -533,7 +531,6 @@ export const SLEEP_OPTIONS: SleepOption[] = [
     name: 'Deixar o celular fora do quarto',
     description: '−Dependência, +Disposição, um pouco menos Felicidade',
     phases: [2, 3, 4, 5, 6, 7],
-    conflictsWith: ['feed'],
     effects: { main: { dependencia: -5, felicidade: -3 } },
     disposicaoGainModifier: 8,
   },

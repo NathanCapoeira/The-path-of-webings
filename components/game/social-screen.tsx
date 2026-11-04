@@ -3,7 +3,7 @@
 import { useEffect, useEffectEvent, useRef } from 'react'
 import { ChevronDown, Clock, EyeOff, FastForward, Heart, MessageCircle, Share2, Users, X } from 'lucide-react'
 import { CATEGORIES, MAIN_LABELS, REELS_PER_SPEEDUP, SUB_LABELS } from '@/lib/game/data'
-import { feedShare, formatClock, minutesPerSecond } from '@/lib/game/engine'
+import { MAX_FEED_RATE, feedShare, formatClock, minutesPerSecond } from '@/lib/game/engine'
 import type { MainKey, SubKey } from '@/lib/game/types'
 import { cn } from '@/lib/utils'
 import { useGame } from './game-provider'
@@ -170,7 +170,9 @@ export function SocialScreen() {
             <span className="font-display text-lg font-bold">1 segundo = {rate} min</span>
           </div>
           <p className="text-sm opacity-80 text-pretty">
-            O tempo acelera a cada {REELS_PER_SPEEDUP} vídeos. Faltam {toNextSpeedup} para dobrar.
+            {rate === MAX_FEED_RATE
+              ? 'O relógio atingiu a velocidade máxima.'
+              : `O tempo acelera a cada ${REELS_PER_SPEEDUP} vídeos. Faltam ${toNextSpeedup} para dobrar.`}
             Hoje você já viu {state.reelsToday} vídeos e gastou {Math.round(state.screenMinutesToday)} min.
           </p>
         </div>
@@ -185,7 +187,7 @@ export function SocialScreen() {
               inverted={k === 'dependencia'}
             />
           ))}
-          {state.lastReelEffects ? (
+          {state.reelsToday > 0 && state.lastReelEffects ? (
             <div className="flex flex-wrap gap-1.5 border-t border-border pt-3" aria-label="Efeito do último vídeo">
               {Object.entries(state.lastReelEffects.main ?? {}).map(([k, v]) => (
                 <EffectChip key={k} label={MAIN_LABELS[k as MainKey]} value={v as number} invert={k === 'dependencia'} />
