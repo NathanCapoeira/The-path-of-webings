@@ -36,7 +36,12 @@ function restoredState(): GameState {
       lastActivityResult: candidate.lastActivityResult ?? null,
       likesByCategory: candidate.likesByCategory ?? emptyCategoryCounts(),
       notInterestedByCategory: candidate.notInterestedByCategory ?? emptyCategoryCounts(),
+      dailyReelsByCategory: candidate.dailyReelsByCategory ?? emptyCategoryCounts(),
+      socialSecondsByCategory: candidate.socialSecondsByCategory ?? emptyCategoryCounts(),
       lastReadLogId: candidate.lastReadLogId ?? 0,
+      digitalEffects: candidate.digitalEffects ?? [],
+      digitalEffectCounter: candidate.digitalEffectCounter ?? 0,
+      metrics: candidate.metrics ?? { activeSeconds: 0, phaseSeconds: Array(8).fill(0), lifeActions: 0, socialInteractions: 0, eventsPresented: 0, sleeps: 0 },
     } as GameState
   } catch {
     return createInitialState()

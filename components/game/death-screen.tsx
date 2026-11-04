@@ -27,6 +27,11 @@ const CAUSES: Record<DeathCause, { title: string; text: string }> = {
   },
 }
 
+function formatDuration(seconds: number) {
+  const minutes = Math.floor(seconds / 60)
+  return `${minutes}:${String(seconds % 60).padStart(2, '0')}`
+}
+
 export function DeathScreen() {
   const { state, dispatch } = useGame()
   const cause = CAUSES[state.deathCause ?? 'saude']
@@ -34,13 +39,14 @@ export function DeathScreen() {
   const topCategory = [...CATEGORY_ORDER].sort((a, b) => state.reelsByCategory[b] - state.reelsByCategory[a])[0]
   const screenHours = Math.round(state.totalScreenMinutes / 60)
   const maxScreen = Math.max(60, ...state.history.map((h) => h.screenMinutes))
+  const socialSeconds = CATEGORY_ORDER.reduce((sum, category) => sum + state.socialSecondsByCategory[category], 0)
 
   const lessons: string[] = []
   if (state.totalScreenMinutes > state.history.length * 180)
     lessons.push('Você passou, em média, mais de 3 horas por dia nas redes.')
   if (state.activityCounts.socializar < state.history.length)
     lessons.push('Você socializou pouco presencialmente — isso ajuda muito a reduzir a dependência.')
-  if (topCategory === 'brainrot' || topCategory === 'meme')
+  if (totalReels > 0 && (topCategory === 'brainrot' || topCategory === 'meme'))
     lessons.push(`Seu feed foi dominado por ${CATEGORIES[topCategory].label}, que corroem o Foco.`)
   if (state.challengesFailed > state.challengesPassed)
     lessons.push('Você falhou em mais desafios do que passou. Sub atributos baixos cobram seu preço.')
@@ -71,6 +77,11 @@ export function DeathScreen() {
           { label: 'Vídeos vistos', value: totalReels.toLocaleString('pt-BR') },
           { label: 'Seguidores', value: state.followers.toLocaleString('pt-BR') },
           { label: 'Desafios vencidos', value: `${state.challengesPassed}/${state.challengesPassed + state.challengesFailed}` },
+          { label: 'Tempo ativo real', value: formatDuration(state.metrics.activeSeconds) },
+          { label: 'Tempo real no feed', value: formatDuration(socialSeconds) },
+          { label: 'Ações de vida', value: String(state.metrics.lifeActions) },
+          { label: 'Eventos vistos', value: String(state.metrics.eventsPresented) },
+          { label: 'Ciclos de sono', value: String(state.metrics.sleeps) },
           ...ACTIVITIES.filter((a) => a.id !== 'descansar').map((a) => ({
             label: a.name,
             value: `${state.activityCounts[a.id]}x`,
@@ -81,6 +92,12 @@ export function DeathScreen() {
             <span className="font-display text-2xl font-bold tabular-nums">{stat.value}</span>
           </div>
         ))}
+      </section>
+
+      <section className="flex flex-col gap-3 rounded-3xl border border-border bg-card p-5" aria-labelledby="ritmo-title">
+        <h2 id="ritmo-title" className="font-display text-lg font-bold">Ritmo da partida</h2>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{PHASES.slice(0, 8).map((phase) => <div key={phase.id} className="rounded-2xl bg-secondary p-3"><p className="text-xs text-muted-foreground">{phase.name}</p><p className="font-display text-lg font-bold tabular-nums">{formatDuration(state.metrics.phaseSeconds[phase.id] ?? 0)}</p></div>)}</div>
+        <p className="text-xs text-muted-foreground">Tempo ativo exclui partida pausada, Diário, painel do algoritmo e diálogos informativos.</p>
       </section>
 
       {state.history.length > 1 ? (

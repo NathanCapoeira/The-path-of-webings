@@ -16,7 +16,7 @@ export { DEFAULT_AVATAR } from './avatar'
 
 export const DAY_START = 7 * 60
 export const DAY_END = 24 * 60
-export const SLEEP_FROM = 19 * 60
+export const SLEEP_FROM = 16 * 60
 export const REELS_PER_SPEEDUP = 4
 export const MAX_SOCIAL_MINUTES_PER_SECOND = 64
 export const MAX_AGE = 100
@@ -51,7 +51,7 @@ export const PHASES: Phase[] = [
     name: 'Bebê',
     ageLabel: '1 a 3 anos',
     minAge: 1,
-    yearsPerSleep: 1,
+    yearsPerSleep: 2,
     description:
       'Seus pais já te entregam o tablet para você ficar quieto. Brinque, descanse e descubra o mundo.',
   },
@@ -60,7 +60,7 @@ export const PHASES: Phase[] = [
     name: '1ª Infância',
     ageLabel: '3 a 6 anos',
     minAge: 3,
-    yearsPerSleep: 1,
+    yearsPerSleep: 3,
     description: 'Hora de correr, aprender as primeiras letras e fazer amigos na escolinha.',
   },
   {
@@ -68,7 +68,7 @@ export const PHASES: Phase[] = [
     name: '2ª Infância',
     ageLabel: '6 a 10 anos',
     minAge: 6,
-    yearsPerSleep: 1,
+    yearsPerSleep: 4,
     description: 'Começam as provas e os campeonatos. O celular fica cada vez mais interessante.',
   },
   {
@@ -76,7 +76,7 @@ export const PHASES: Phase[] = [
     name: 'Pré-adolescência',
     ageLabel: '10 a 13 anos',
     minAge: 10,
-    yearsPerSleep: 1,
+    yearsPerSleep: 3,
     description: 'Você pode criar conteúdo na web. Seguidores agora fazem parte da sua vida.',
   },
   {
@@ -84,7 +84,7 @@ export const PHASES: Phase[] = [
     name: 'Adolescência · Fundamental',
     ageLabel: '13 a 15 anos',
     minAge: 13,
-    yearsPerSleep: 1,
+    yearsPerSleep: 2,
     description: 'Apresentações, comparações e a pressão de estar sempre online.',
   },
   {
@@ -92,7 +92,7 @@ export const PHASES: Phase[] = [
     name: 'Adolescência · Médio',
     ageLabel: '15 a 18 anos',
     minAge: 15,
-    yearsPerSleep: 1,
+    yearsPerSleep: 3,
     description: 'Vestibular, primeiros trabalhos e decisões que moldam quem você será.',
   },
   {
@@ -100,18 +100,18 @@ export const PHASES: Phase[] = [
     name: 'Vida Adulta',
     ageLabel: '18 a 60 anos',
     minAge: 18,
-    yearsPerSleep: 4,
+    yearsPerSleep: 7,
     description:
-      'Entrevistas de emprego, responsabilidades e e-mails fora de hora. Cada noite de sono passa 4 anos.',
+      'Entrevistas de emprego, responsabilidades e e-mails fora de hora. Cada noite representa um salto de 7 anos.',
   },
   {
     id: 7,
     name: '3ª Idade',
     ageLabel: '60 anos em diante',
     minAge: 60,
-    yearsPerSleep: 2,
+    yearsPerSleep: 10,
     description:
-      'O corpo pede mais cuidado. Cada noite de sono passa 2 anos. Até onde você consegue chegar?',
+      'O corpo pede mais cuidado. Cada noite representa um salto de 10 anos rumo ao encerramento da jornada.',
   },
   {
     id: 8,
@@ -152,7 +152,7 @@ export const ACTIVITIES: Activity[] = [
     id: 'exercicio',
     name: 'Exercício físico',
     description: 'Aumenta Saúde e Força, mas cansa um pouco.',
-    minutes: 90,
+    minutes: 150,
     minPhase: 1,
     requirements: (p) => ({ forca: scale(8, 3)(p), foco: scale(8, 3)(p) }),
     effects: {
@@ -165,7 +165,7 @@ export const ACTIVITIES: Activity[] = [
     id: 'estudar',
     name: 'Estudar',
     description: 'Aumenta Inteligência e Foco. Cansa e não é tão divertido.',
-    minutes: 120,
+    minutes: 180,
     minPhase: 1,
     requirements: (p) => ({ inteligencia: scale(8, 3)(p), foco: scale(10, 3)(p) }),
     effects: {
@@ -178,7 +178,7 @@ export const ACTIVITIES: Activity[] = [
     id: 'socializar',
     name: 'Socializar',
     description: 'Aumenta Felicidade e Sanidade, diminui a Dependência.',
-    minutes: 120,
+    minutes: 180,
     minPhase: 0,
     requirements: (p) => ({ sanidade: scale(10, 3)(p) }),
     effects: {
@@ -191,7 +191,7 @@ export const ACTIVITIES: Activity[] = [
     id: 'criar',
     name: 'Criar conteúdo na Web',
     description: 'Ganha seguidores. Quanto mais Foco, melhor o conteúdo.',
-    minutes: 120,
+    minutes: 180,
     minPhase: 3,
     requirements: (p) => ({ foco: scale(15, 3)(p) }),
     effects: {
@@ -204,7 +204,7 @@ export const ACTIVITIES: Activity[] = [
     id: 'descansar',
     name: 'Descansar',
     description: 'Uma pausa sem telas. Recupera Disposição, Foco e Sanidade e reduz a Dependência.',
-    minutes: 60,
+    minutes: 120,
     minPhase: 0,
     requirements: () => ({}),
     effects: {

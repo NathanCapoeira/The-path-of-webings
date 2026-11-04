@@ -2,7 +2,7 @@
 
 import { Clock, LogOut, Users } from 'lucide-react'
 import { ACTIVITIES, DIFFICULTIES, MAIN_LABELS, PHASES, SUB_LABELS, DAY_END, DAY_START } from '@/lib/game/data'
-import { computeSubs, formatClock, maxHealthForAge } from '@/lib/game/engine'
+import { computeEffectiveSubs, effectiveMain, formatClock, maxHealthForAge } from '@/lib/game/engine'
 import type { ActivityId, MainKey, SubKey } from '@/lib/game/types'
 import { useGame } from './game-provider'
 import { MAIN_ICONS, SUB_ICONS } from './icons'
@@ -15,7 +15,8 @@ const SUB_KEYS: SubKey[] = ['foco', 'sanidade', 'forca', 'inteligencia']
 
 export function Hud({ previewActivityId = null, onOpenDiary }: { previewActivityId?: ActivityId | null; onOpenDiary: () => void }) {
   const { state, dispatch } = useGame()
-  const subs = computeSubs(state.main, state.subBase)
+  const subs = computeEffectiveSubs(state)
+  const main = effectiveMain(state)
   const phase = PHASES[state.phase]
   const dayProgress = Math.max(0, Math.min(100, ((state.minutes - DAY_START) / (DAY_END - DAY_START)) * 100))
   const previewActivity = ACTIVITIES.find((activity) => activity.id === previewActivityId)
@@ -62,7 +63,7 @@ export function Hud({ previewActivityId = null, onOpenDiary }: { previewActivity
 
       <div className="grid gap-4 md:grid-cols-[1.4fr_1fr]">
         <section aria-label="Atributos principais" className="grid grid-cols-2 gap-x-4 gap-y-3">
-          {MAIN_KEYS.map((key) => <StatBar key={key} label={MAIN_LABELS[key]} value={state.main[key]} max={key === 'saude' ? maxHealthForAge(state.age) : 100} icon={MAIN_ICONS[key]} inverted={key === 'dependencia'} />)}
+          {MAIN_KEYS.map((key) => <StatBar key={key} label={MAIN_LABELS[key]} value={main[key]} max={key === 'saude' ? maxHealthForAge(state.age) : 100} icon={MAIN_ICONS[key]} inverted={key === 'dependencia'} />)}
         </section>
         <section
           aria-label="Sub atributos"

@@ -19,13 +19,18 @@ function useSocialClock(active: boolean, tick: () => void) {
   }, [active])
 }
 
-export function SocialScreen({ diaryOpen, onOpenDiary }: { diaryOpen: boolean; onOpenDiary: () => void }) {
+export function SocialScreen({ diaryOpen, onOpenDiary, onInformationOpenChange }: { diaryOpen: boolean; onOpenDiary: () => void; onInformationOpenChange: (open: boolean) => void }) {
   const { state, dispatch } = useGame()
   const [algorithmOpen, setAlgorithmOpen] = useState(false)
   const reel = state.currentReel
   const rate = minutesPerSecond(state.reelsToday)
   const lastNavigation = useRef(0)
   const touchStartY = useRef<number | null>(null)
+
+  useEffect(() => {
+    onInformationOpenChange(algorithmOpen)
+    return () => onInformationOpenChange(false)
+  }, [algorithmOpen, onInformationOpenChange])
 
   useSocialClock(state.view === 'social' && !state.modal && !state.pendingEvent && !algorithmOpen && !diaryOpen, () => dispatch({ type: 'SOCIAL_TICK' }))
 
@@ -112,7 +117,7 @@ function AlgorithmPanel({ onClose }: { onClose: () => void }) {
           return <div key={category} className="rounded-2xl border border-white/10 bg-white/5 p-3">
             <div className="flex items-center justify-between gap-2 text-sm"><span className="font-semibold">{CATEGORIES[category].label}</span><span className="tabular-nums text-white/70">{percent}% do peso</span></div>
             <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-[#65a8ff]" style={{ width: `${percent}%` }} /></div>
-            <p className="mt-2 text-xs text-white/60">{state.reelsByCategory[category]} vistos · {state.likesByCategory[category]} curtidos · {state.notInterestedByCategory[category]} rejeitados</p>
+            <p className="mt-2 text-xs text-white/60">{state.reelsByCategory[category]} vistos · {state.likesByCategory[category]} curtidos · {state.notInterestedByCategory[category]} rejeitados · {state.socialSecondsByCategory[category]}s consumidos</p>
           </div>
         })}</div>
         <p className="mt-4 rounded-2xl border border-[#65a8ff]/25 bg-[#65a8ff]/10 p-3 text-sm text-white/75">Assistir por mais tempo e curtir aumentam o peso do assunto. “Não tenho interesse” reduz diretamente esse peso. O painel apenas consulta esses dados e não altera suas recomendações.</p>

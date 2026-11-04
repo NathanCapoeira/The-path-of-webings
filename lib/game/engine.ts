@@ -34,6 +34,7 @@ import type {
   GainKey,
   Difficulty,
 } from './types'
+import { applyDigitalEffect, digitalModifiers, recoverDigitalEffects, type RecoveryTrigger } from './digital-effects'
 
 export const clamp = (v: number, min = 0, max = 100) => Math.min(max, Math.max(min, v))
 
@@ -48,6 +49,27 @@ export function computeSubs(main: MainStats, base: SubStats): SubStats {
     sanidade: Math.max(0, base.sanidade + (felicidade - 50) * 0.3 - dependencia * 0.3),
     forca: Math.max(0, base.forca + (saude - 50) * 0.25 + (disposicao - 50) * 0.15),
     inteligencia: Math.max(0, base.inteligencia - dependencia * 0.3),
+  }
+}
+
+export function effectiveMain(state: GameState): MainStats {
+  const modifiers = digitalModifiers(state.digitalEffects)
+  return {
+    saude: clamp(state.main.saude + (modifiers.saude ?? 0), 0, maxHealthForAge(state.age)),
+    disposicao: clamp(state.main.disposicao + (modifiers.disposicao ?? 0)),
+    felicidade: clamp(state.main.felicidade + (modifiers.felicidade ?? 0)),
+    dependencia: clamp(state.main.dependencia + (modifiers.dependencia ?? 0)),
+  }
+}
+
+export function computeEffectiveSubs(state: GameState): SubStats {
+  const modifiers = digitalModifiers(state.digitalEffects)
+  const subs = computeSubs(effectiveMain(state), state.subBase)
+  return {
+    foco: Math.max(0, subs.foco + (modifiers.foco ?? 0)),
+    sanidade: Math.max(0, subs.sanidade + (modifiers.sanidade ?? 0)),
+    forca: Math.max(0, subs.forca + (modifiers.forca ?? 0)),
+    inteligencia: Math.max(0, subs.inteligencia + (modifiers.inteligencia ?? 0)),
   }
 }
 
@@ -82,7 +104,7 @@ export function gainMultiplierForOccurrence(occurrence: number) {
 
 export function activityRequirementChecks(state: GameState, id: ActivityId) {
   const activity = ACTIVITIES.find((a) => a.id === id)!
-  const subs = computeSubs(state.main, state.subBase)
+  const subs = computeEffectiveSubs(state)
   const reqs = activity.requirements(state.phase)
   return (Object.entries(reqs) as [SubKey, number][]).map(([key, required]) => ({
     key,
@@ -103,6 +125,18 @@ export function canPerformAnyActivity(state: GameState) {
 function addLog(state: GameState, text: string, tone: LogTone = 'neutral'): GameState {
   const entry = { id: state.logCounter + 1, age: state.age, time: state.minutes, text, tone }
   return { ...state, logCounter: entry.id, log: [entry, ...state.log].slice(0, 40) }
+}
+
+function addTrackedDigitalEffect(state: GameState, kind: Parameters<typeof applyDigitalEffect>[1], source: string) {
+  const result = applyDigitalEffect(state, kind, source)
+  if (result.change === 'refreshed') return result.state
+  const effect = result.state.digitalEffects.find((item) => item.kind === kind && item.status === 'active')!
+  return addLog(result.state, `${effect.label}: ${effect.targetAttribute} ${effect.modifierValue} pontos. Origem: redes sociais.`, 'bad')
+}
+
+function recoverTrackedDigitalEffects(state: GameState, trigger: RecoveryTrigger) {
+  const result = recoverDigitalEffects(state, trigger)
+  return result.recovered.reduce((next, effect) => addLog(next, `${effect.label} foi removido: ${effect.endReason}.`, 'good'), result.state)
 }
 
 function clampState(state: GameState): GameState {
@@ -130,7 +164,7 @@ interface ApplyOptions {
 }
 
 export function applyEffects(state: GameState, effects: Effects, opts: ApplyOptions = {}): GameState {
-  const mult = opts.fromActivity ? dependencyGainMultiplier(state.main.dependencia) : 1
+  const mult = opts.fromActivity ? dependencyGainMultiplier(effectiveMain(state).dependencia) : 1
   const wear = DIFFICULTIES[state.difficulty].wearMultiplier
   const main = { ...state.main }
   for (const [k, v] of Object.entries(effects.main ?? {}) as [MainKey, number][]) {
@@ -156,7 +190,7 @@ export function applyEffects(state: GameState, effects: Effects, opts: ApplyOpti
 function advanceTime(state: GameState, minutes: number): GameState {
   minutes = Math.min(minutes, Math.max(0, DAY_END - state.minutes))
   const hours = minutes / 60
-  const dep = state.main.dependencia
+  const dep = effectiveMain(state).dependencia
   const wear = DIFFICULTIES[state.difficulty].wearMultiplier
   const dependencyWear = DEPENDENCY_WEAR_BY_PHASE[Math.min(state.phase, DEPENDENCY_WEAR_BY_PHASE.length - 1)]
   const main = { ...state.main }
@@ -169,8 +203,9 @@ function advanceTime(state: GameState, minutes: number): GameState {
 function checkDeath(state: GameState): GameState {
   if (state.status !== 'playing') return state
   let cause: GameState['deathCause'] = null
-  if (state.main.saude <= 0) cause = state.main.disposicao <= 0 ? 'exaustao' : 'saude'
-  else if (state.main.felicidade <= 0) cause = 'felicidade'
+  const main = effectiveMain(state)
+  if (main.saude <= 0) cause = main.disposicao <= 0 ? 'exaustao' : 'saude'
+  else if (main.felicidade <= 0) cause = 'felicidade'
   if (!cause) return state
   return {
     ...state,
@@ -196,7 +231,7 @@ function resolveChallenge(state: GameState): GameState {
   const scheduled = state.challenge
   if (!scheduled || state.minutes < scheduled.hour * 60) return state
   const challenge = CHALLENGES.find((c) => c.id === scheduled.id)!
-  const subs = computeSubs(state.main, state.subBase)
+  const subs = computeEffectiveSubs(state)
   const checks = challenge.requires.map((key) => ({
     key,
     value: subs[key],
@@ -258,7 +293,7 @@ function maybeTriggerEvent(state: GameState, chance: number): GameState {
   if (Math.random() > chance) return state
   const event = pickEvent(state)
   if (!event) return state
-  return { ...state, pendingEvent: event, eventsSeen: [...state.eventsSeen, event.id] }
+  return { ...state, pendingEvent: event, eventsSeen: [...state.eventsSeen, event.id], metrics: { ...state.metrics, eventsPresented: state.metrics.eventsPresented + 1 } }
 }
 
 function scheduleChallenge(phase: number) {
@@ -267,7 +302,7 @@ function scheduleChallenge(phase: number) {
   const challenge = pool[Math.floor(Math.random() * pool.length)]
   return {
     id: challenge.id,
-    hour: 13 + Math.floor(Math.random() * 7),
+    hour: 11 + Math.floor(Math.random() * 5),
     threshold: challengeThreshold(phase),
   }
 }
@@ -322,6 +357,8 @@ export function createInitialState(name = '', avatar: AvatarConfig = DEFAULT_AVA
     screenMinutesToday: 0,
     totalScreenMinutes: 0,
     reelsByCategory: emptyCategoryCounts(),
+    dailyReelsByCategory: emptyCategoryCounts(),
+    socialSecondsByCategory: emptyCategoryCounts(),
     likesByCategory: emptyCategoryCounts(),
     notInterestedByCategory: emptyCategoryCounts(),
     challenge: null,
@@ -338,6 +375,9 @@ export function createInitialState(name = '', avatar: AvatarConfig = DEFAULT_AVA
     log: [],
     logCounter: 0,
     lastReadLogId: 0,
+    digitalEffects: [],
+    digitalEffectCounter: 0,
+    metrics: { activeSeconds: 0, phaseSeconds: Array(8).fill(0), lifeActions: 0, socialInteractions: 0, eventsPresented: 0, sleeps: 0 },
     history: [],
     deathCause: null,
   }
@@ -361,6 +401,7 @@ export type GameAction =
   | { type: 'CONFIRM_SLEEP'; optionId: string | null }
   | { type: 'CLEAR_AVATAR_REACTION' }
   | { type: 'MARK_LOG_READ' }
+  | { type: 'ACTIVE_SECOND' }
   | { type: 'EXIT_TO_MENU' }
   | { type: 'CONTINUE_GAME' }
 
@@ -387,6 +428,7 @@ function doActivity(state: GameState, id: ActivityId): GameState {
     activityCounts: { ...state.activityCounts, [id]: state.activityCounts[id] + 1 },
     dailyActivityCounts: { ...state.dailyActivityCounts, [id]: state.dailyActivityCounts[id] + 1 },
     dailyGainCounts,
+    metrics: { ...state.metrics, lifeActions: state.metrics.lifeActions + 1 },
   }
   const beforeMain = { ...next.main }
   const beforeSub = { ...next.subBase }
@@ -399,7 +441,7 @@ function doActivity(state: GameState, id: ActivityId): GameState {
   if (id === 'descansar') next = { ...next, avatarReaction: 'rest' }
 
   if (id === 'criar') {
-    const subs = computeSubs(state.main, state.subBase)
+    const subs = computeEffectiveSubs(state)
     const quality = subs.foco * 0.8 + subs.inteligencia * 0.4
     const viral = Math.random() < 0.08
     let gained = Math.round(quality * (0.5 + Math.random()) * (1 + state.followers / 2000))
@@ -416,6 +458,9 @@ function doActivity(state: GameState, id: ActivityId): GameState {
     next = addLog(next, `Você fez: ${activity.name}.`, 'neutral')
   }
 
+  if (id === 'descansar') next = recoverTrackedDigitalEffects(next, 'rest')
+  if (id === 'socializar') next = recoverTrackedDigitalEffects(next, 'socialize')
+
   next = finalize(next)
   return maybeTriggerEvent(next, 0.28)
 }
@@ -424,7 +469,7 @@ function applyReel(state: GameState): GameState {
   const reel = state.currentReel
   if (!reel) return state
   const info = CATEGORIES[reel.category]
-  const tolerance = dependencyGainMultiplier(state.main.dependencia)
+  const tolerance = dependencyGainMultiplier(effectiveMain(state).dependencia)
   const mainEffects = Object.fromEntries(
     Object.entries(info.effects.main).map(([k, v]) => [
       k,
@@ -433,8 +478,8 @@ function applyReel(state: GameState): GameState {
   ) as Partial<MainStats>
   const effects: Effects = { main: mainEffects, sub: info.effects.sub }
   const weightBoost = 0.15 + Math.min(3, state.currentReelSeconds) * 0.12
-  const next = applyEffects(state, effects)
-  return {
+  let next = applyEffects(state, effects)
+  next = {
     ...next,
     lastReelEffects: effects,
     reelsToday: state.reelsToday + 1,
@@ -442,11 +487,19 @@ function applyReel(state: GameState): GameState {
       ...state.reelsByCategory,
       [reel.category]: state.reelsByCategory[reel.category] + 1,
     },
+    dailyReelsByCategory: {
+      ...state.dailyReelsByCategory,
+      [reel.category]: state.dailyReelsByCategory[reel.category] + 1,
+    },
     feedWeights: {
       ...state.feedWeights,
       [reel.category]: Math.min(8, state.feedWeights[reel.category] + weightBoost),
     },
   }
+  const fastContent = next.dailyReelsByCategory.meme + next.dailyReelsByCategory.brainrot
+  if (fastContent === 3 || fastContent === 5) next = addTrackedDigitalEffect(next, 'fragmentacao', `feed:${reel.id}`)
+  if (reel.category === 'lifestyle' && next.dailyReelsByCategory.lifestyle === 3) next = addTrackedDigitalEffect(next, 'comparacao', `feed:${reel.id}`)
+  return next
 }
 
 function loadNextReel(state: GameState): GameState {
@@ -472,6 +525,8 @@ function sleep(state: GameState, optionId: string | null): GameState {
     },
   })
   if (option) next = applyEffects(next, option.effects)
+  next = recoverTrackedDigitalEffects(next, optionId === 'feed' ? 'sleep-online' : 'sleep-offline')
+  if (optionId === 'feed') next = addTrackedDigitalEffect(next, 'sono-digital', 'sleep-option:feed')
 
   const history = [...next.history, snapshot(next)]
   const prevPhase = state.phase
@@ -499,6 +554,7 @@ function sleep(state: GameState, optionId: string | null): GameState {
     forcedSleep: false,
     reelsToday: 0,
     screenMinutesToday: 0,
+    dailyReelsByCategory: emptyCategoryCounts(),
     currentReel: null,
     lastReelEffects: null,
     dailyActivityCounts: emptyActivityCounts(),
@@ -507,6 +563,7 @@ function sleep(state: GameState, optionId: string | null): GameState {
     challenge: scheduleChallenge(phase),
     modal: phase !== prevPhase ? { kind: 'phase', phase } : null,
     eventsSeen: phase !== prevPhase ? [] : next.eventsSeen,
+    metrics: { ...next.metrics, sleeps: next.metrics.sleeps + 1 },
   })
 
   next = addLog(
@@ -567,12 +624,17 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         currentReelSeconds: state.currentReelSeconds + 1,
         screenMinutesToday: state.screenMinutesToday + rate,
         totalScreenMinutes: state.totalScreenMinutes + rate,
+        socialSecondsByCategory: state.currentReel ? {
+          ...state.socialSecondsByCategory,
+          [state.currentReel.category]: state.socialSecondsByCategory[state.currentReel.category] + 1,
+        } : state.socialSecondsByCategory,
       }
+      if (state.screenMinutesToday < 120 && next.screenMinutesToday >= 120 && state.currentReel) next = addTrackedDigitalEffect(next, 'sobrecarga', `screen-time:${state.currentReel.id}`)
       return finalize(next)
     }
     case 'NEXT_REEL': {
       if (state.status !== 'playing' || state.view !== 'social' || state.modal || state.pendingEvent) return state
-      const next = loadNextReel(applyReel(state))
+      const next = loadNextReel(applyReel({ ...state, metrics: { ...state.metrics, socialInteractions: state.metrics.socialInteractions + 1 } }))
       return finalize(next)
     }
     case 'LIKE_REEL': {
@@ -581,6 +643,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const next = applyEffects(state, { main: { felicidade: 0.5, dependencia: 0.5 } })
       return {
         ...next,
+        metrics: { ...next.metrics, socialInteractions: next.metrics.socialInteractions + 1 },
         currentReelLiked: true,
         feedWeights: {
           ...next.feedWeights,
@@ -597,6 +660,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const category = state.currentReel.category
       const next: GameState = {
         ...state,
+        metrics: { ...state.metrics, socialInteractions: state.metrics.socialInteractions + 1 },
         reelsToday: state.reelsToday + 1,
         lastReelEffects: null,
         feedWeights: {
@@ -634,6 +698,12 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return { ...state, avatarReaction: null }
     case 'MARK_LOG_READ':
       return state.lastReadLogId >= state.logCounter ? state : { ...state, lastReadLogId: state.logCounter }
+    case 'ACTIVE_SECOND': {
+      if (state.status !== 'playing') return state
+      const phaseSeconds = [...state.metrics.phaseSeconds]
+      phaseSeconds[state.phase] = (phaseSeconds[state.phase] ?? 0) + 1
+      return { ...state, metrics: { ...state.metrics, activeSeconds: state.metrics.activeSeconds + 1, phaseSeconds } }
+    }
     case 'EXIT_TO_MENU':
       if (state.status !== 'playing') return state
       return { ...state, status: 'paused', view: 'life', modal: null, pendingEvent: null }

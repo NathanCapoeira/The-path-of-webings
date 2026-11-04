@@ -6,6 +6,38 @@ export type MainStats = Record<MainKey, number>
 export type SubStats = Record<SubKey, number>
 export type GainKey = MainKey | SubKey
 
+export type DigitalEffectKind = 'fragmentacao' | 'comparacao' | 'sobrecarga' | 'sono-digital'
+export type DigitalEffectStatus = 'active' | 'recovered' | 'expired'
+
+export interface DigitalEffect {
+  id: string
+  kind: DigitalEffectKind
+  sourceEventId: string
+  sourceType: 'social_media'
+  label: string
+  description: string
+  targetAttribute: GainKey
+  modifierValue: number
+  stacks: number
+  maxStacks: number
+  appliedAtAge: number
+  appliedAtMinutes: number
+  remainingSleeps: number
+  recoveryRule: string
+  status: DigitalEffectStatus
+  endedAtAge?: number
+  endReason?: string
+}
+
+export interface RunMetrics {
+  activeSeconds: number
+  phaseSeconds: number[]
+  lifeActions: number
+  socialInteractions: number
+  eventsPresented: number
+  sleeps: number
+}
+
 export interface Effects {
   main?: Partial<MainStats>
   sub?: Partial<SubStats>
@@ -172,6 +204,8 @@ export interface GameState {
   screenMinutesToday: number
   totalScreenMinutes: number
   reelsByCategory: Record<Category, number>
+  dailyReelsByCategory: Record<Category, number>
+  socialSecondsByCategory: Record<Category, number>
   likesByCategory: Record<Category, number>
   notInterestedByCategory: Record<Category, number>
   challenge: ScheduledChallenge | null
@@ -188,6 +222,9 @@ export interface GameState {
   log: LogEntry[]
   logCounter: number
   lastReadLogId: number
+  digitalEffects: DigitalEffect[]
+  digitalEffectCounter: number
+  metrics: RunMetrics
   history: YearSnapshot[]
   deathCause: DeathCause | null
 }

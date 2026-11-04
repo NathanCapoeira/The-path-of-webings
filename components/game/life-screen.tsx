@@ -8,7 +8,8 @@ import {
   activityLimitReached,
   activityRequirementChecks,
   canPerformAnyActivity,
-  computeSubs,
+  computeEffectiveSubs,
+  effectiveMain,
   dependencyGainMultiplier,
   formatClock,
   isActivityAvailable,
@@ -56,8 +57,8 @@ function ActivityDetails({ activity, onClose, onConfirm }: { activity: Activity;
 
 export function LifeScreen({ selectedActivity, onSelectActivity }: { selectedActivity: ActivityId | null; onSelectActivity: (id: ActivityId | null) => void }) {
   const { state, dispatch } = useGame()
-  const subs = computeSubs(state.main, state.subBase)
-  const mult = dependencyGainMultiplier(state.main.dependencia)
+  const subs = computeEffectiveSubs(state)
+  const mult = dependencyGainMultiplier(effectiveMain(state).dependencia)
   const canSleep = state.minutes >= SLEEP_FROM
   const canDoActivity = canPerformAnyActivity(state)
   const scheduled = state.challenge ? CHALLENGES.find((c) => c.id === state.challenge!.id) : null
