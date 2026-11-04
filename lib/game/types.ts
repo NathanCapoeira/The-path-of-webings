@@ -85,7 +85,6 @@ export interface SleepOption {
   name: string
   description: string
   phases: number[]
-  conflictsWith?: string[]
   effects: Effects
   disposicaoGainModifier?: number
 }
