@@ -120,13 +120,15 @@ export interface YearSnapshot {
 export type DeathCause = 'saude' | 'exaustao' | 'felicidade' | 'velhice'
 
 export type Gender = 'mulher' | 'homem'
+export type FaceShape = 'oval' | 'redondo' | 'angular'
 export type HairStyle = 'raspado' | 'curto' | 'ondulado' | 'cacheado' | 'longo' | 'afro' | 'trancado' | 'locs' | 'coques' | 'rabo'
-export type Outfit = 'camiseta' | 'moletom' | 'camisa' | 'jaqueta'
-export type Expression = 'sorriso' | 'serio' | 'calmo'
+export type Outfit = 'camiseta' | 'oversized' | 'moletom' | 'camisa' | 'jaqueta' | 'bomber' | 'esportivo' | 'social'
+export type Expression = 'sorriso' | 'serio' | 'calmo' | 'triste' | 'preocupado' | 'cansado' | 'surpreso' | 'irritado'
 export type AvatarReaction = 'celebrate' | 'rest' | null
 
 export interface AvatarConfig {
   gender: Gender
+  faceShape: FaceShape
   skinTone: string
   hairStyle: HairStyle
   hairColor: string

@@ -1,10 +1,12 @@
-import type { AvatarConfig, Expression, HairStyle } from './types'
+import type { AvatarConfig, Expression, FaceShape, HairStyle, Outfit } from './types'
 
 export const AVATAR_OPTIONS = {
   skinTone: [
     { value: '#F8D7C1', label: 'Porcelana' },
+    { value: '#F1C6A8', label: 'Pêssego' },
     { value: '#E9B38E', label: 'Dourado' },
     { value: '#C9825A', label: 'Canela' },
+    { value: '#AE6849', label: 'Âmbar' },
     { value: '#9B573B', label: 'Cacau' },
     { value: '#6E392B', label: 'Ébano' },
     { value: '#4C291F', label: 'Ônix' },
@@ -13,6 +15,7 @@ export const AVATAR_OPTIONS = {
     { value: '#43271D', label: 'Castanho' },
     { value: '#295B88', label: 'Azul' },
     { value: '#36724B', label: 'Verde' },
+    { value: '#8B642F', label: 'Mel' },
     { value: '#70518B', label: 'Violeta' },
   ],
   hairColor: [
@@ -31,8 +34,17 @@ export const AVATAR_OPTIONS = {
     { value: '#417D62', label: 'Verde' },
     { value: '#CF7534', label: 'Laranja' },
     { value: '#68509A', label: 'Roxo' },
+    { value: '#252A35', label: 'Grafite' },
+    { value: '#D7D2C8', label: 'Creme' },
+    { value: '#B7C6D8', label: 'Azul claro' },
   ],
 } as const
+
+export const FACE_SHAPES: { value: FaceShape; label: string }[] = [
+  { value: 'oval', label: 'Oval' },
+  { value: 'redondo', label: 'Redondo' },
+  { value: 'angular', label: 'Angular' },
+]
 
 export const HAIR_STYLES: { value: HairStyle; label: string; group: 'curto' | 'medio' | 'longo' | 'crespo' }[] = [
   { value: 'raspado', label: 'Raspado', group: 'curto' },
@@ -48,11 +60,29 @@ export const HAIR_STYLES: { value: HairStyle; label: string; group: 'curto' | 'm
 ]
 
 export const EXPRESSIONS: { value: Expression; label: string }[] = [
-  { value: 'sorriso', label: 'Alegre' }, { value: 'calmo', label: 'Neutra' }, { value: 'serio', label: 'Séria' },
+  { value: 'sorriso', label: 'Alegre' },
+  { value: 'calmo', label: 'Neutra' },
+  { value: 'serio', label: 'Séria' },
+  { value: 'triste', label: 'Triste' },
+  { value: 'preocupado', label: 'Preocupada' },
+  { value: 'cansado', label: 'Cansada' },
+  { value: 'surpreso', label: 'Surpresa' },
+  { value: 'irritado', label: 'Irritada' },
+]
+
+export const OUTFITS: { value: Outfit; label: string; style: string }[] = [
+  { value: 'camiseta', label: 'Camiseta', style: 'Casual' },
+  { value: 'oversized', label: 'Oversized', style: 'Streetwear' },
+  { value: 'moletom', label: 'Moletom', style: 'Urbano' },
+  { value: 'camisa', label: 'Camisa', style: 'Casual' },
+  { value: 'jaqueta', label: 'Jaqueta jeans', style: 'Urbano' },
+  { value: 'bomber', label: 'Bomber', style: 'Alternativo' },
+  { value: 'esportivo', label: 'Esportiva', style: 'Esportivo' },
+  { value: 'social', label: 'Blazer', style: 'Social' },
 ]
 
 export const DEFAULT_AVATAR: AvatarConfig = {
-  gender: 'mulher', skinTone: '#E9B38E', hairStyle: 'cacheado', hairColor: '#201816',
+  gender: 'mulher', faceShape: 'oval', skinTone: '#E9B38E', hairStyle: 'cacheado', hairColor: '#201816',
   eyeColor: '#43271D', outfit: 'camiseta', outfitColor: '#2463A4', expression: 'sorriso',
 }
 
@@ -63,17 +93,20 @@ const hairColors = values(AVATAR_OPTIONS.hairColor)
 const outfits = values(AVATAR_OPTIONS.outfitColor)
 const styles = values(HAIR_STYLES)
 const expressions = values(EXPRESSIONS)
+const faceShapes = values(FACE_SHAPES)
+const outfitStyles = values(OUTFITS)
 
 /** Converts saves from the first creator version to the current safe avatar schema. */
 export function normalizeAvatarConfig(value: unknown): AvatarConfig {
   const raw = value && typeof value === 'object' ? value as Partial<AvatarConfig> : {}
   return {
     gender: raw.gender === 'homem' ? 'homem' : 'mulher',
+    faceShape: typeof raw.faceShape === 'string' && faceShapes.has(raw.faceShape) ? raw.faceShape as FaceShape : DEFAULT_AVATAR.faceShape,
     skinTone: typeof raw.skinTone === 'string' && skins.has(raw.skinTone) ? raw.skinTone : DEFAULT_AVATAR.skinTone,
     hairStyle: typeof raw.hairStyle === 'string' && styles.has(raw.hairStyle) ? raw.hairStyle as HairStyle : DEFAULT_AVATAR.hairStyle,
     hairColor: typeof raw.hairColor === 'string' && hairColors.has(raw.hairColor) ? raw.hairColor : DEFAULT_AVATAR.hairColor,
     eyeColor: typeof raw.eyeColor === 'string' && eyes.has(raw.eyeColor) ? raw.eyeColor : DEFAULT_AVATAR.eyeColor,
-    outfit: ['camiseta', 'moletom', 'camisa', 'jaqueta'].includes(raw.outfit ?? '') ? raw.outfit as AvatarConfig['outfit'] : DEFAULT_AVATAR.outfit,
+    outfit: typeof raw.outfit === 'string' && outfitStyles.has(raw.outfit) ? raw.outfit as Outfit : DEFAULT_AVATAR.outfit,
     outfitColor: typeof raw.outfitColor === 'string' && outfits.has(raw.outfitColor) ? raw.outfitColor : DEFAULT_AVATAR.outfitColor,
     expression: typeof raw.expression === 'string' && expressions.has(raw.expression) ? raw.expression as Expression : DEFAULT_AVATAR.expression,
   }

@@ -4,9 +4,9 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { Dices, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { DEFAULT_AVATAR, Avatar, AVATAR_OPTIONS } from './avatar'
-import type { AvatarConfig, Difficulty, Expression, Gender, HairStyle, Outfit } from '@/lib/game/types'
+import type { AvatarConfig, Difficulty, Expression, FaceShape, Gender, HairStyle, Outfit } from '@/lib/game/types'
 import { DIFFICULTIES } from '@/lib/game/data'
-import { EXPRESSIONS, HAIR_STYLES } from '@/lib/game/avatar'
+import { EXPRESSIONS, FACE_SHAPES, HAIR_STYLES, OUTFITS } from '@/lib/game/avatar'
 
 type EditorTab = 'identidade' | 'rosto' | 'cabelo' | 'roupa'
 
@@ -22,13 +22,14 @@ const choose = <T,>(items: readonly T[]) => items[Math.floor(Math.random() * ite
 function randomAvatar(): AvatarConfig {
   return {
     gender: choose<Gender>(['mulher', 'homem']),
+    faceShape: choose<FaceShape>(FACE_SHAPES.map((shape) => shape.value)),
     skinTone: choose(AVATAR_OPTIONS.skinTone).value,
     hairStyle: choose<HairStyle>(HAIR_STYLES.map((style) => style.value)),
     hairColor: choose(AVATAR_OPTIONS.hairColor).value,
     eyeColor: choose(AVATAR_OPTIONS.eyeColor).value,
-    outfit: choose<Outfit>(['camiseta', 'moletom', 'camisa', 'jaqueta']),
+    outfit: choose<Outfit>(OUTFITS.map((outfit) => outfit.value)),
     outfitColor: choose(AVATAR_OPTIONS.outfitColor).value,
-    expression: choose<Expression>(['sorriso', 'serio', 'calmo']),
+    expression: choose<Expression>(EXPRESSIONS.map((expression) => expression.value)),
   }
 }
 
@@ -61,18 +62,18 @@ export function CharacterCreator({ onStart, onBack }: { onStart: (name: string, 
 
   return <main className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col gap-5 px-4 py-6 md:justify-center md:py-10">
     <header className="flex items-center justify-between gap-4"><div><span className="text-xs font-bold uppercase tracking-[.18em] text-primary">Sua nova vida</span><h1 className="font-display text-3xl font-bold md:text-5xl">Crie quem vai viver essa história</h1></div><Button variant="ghost" onClick={onBack}>Voltar</Button></header>
-    <div className="grid gap-5 lg:grid-cols-[minmax(280px,.8fr)_minmax(0,1.2fr)]">
-      <section className="relative flex min-h-80 flex-col items-center justify-end overflow-hidden rounded-[2rem] bg-gradient-to-b from-[#16325c] to-[#081a35] p-5 text-white shadow-xl">
+    <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(280px,.8fr)_minmax(0,1.2fr)]">
+      <section className="relative flex min-h-80 min-w-0 flex-col items-center justify-end overflow-hidden rounded-[2rem] bg-gradient-to-b from-[#16325c] to-[#081a35] p-5 text-white shadow-xl">
         <div className="absolute inset-x-0 top-0 h-28 bg-[radial-gradient(ellipse_at_top,_#3c79bb_0%,transparent_65%)] opacity-70" />
         <Avatar avatar={avatar} className="relative z-10 max-h-72 max-w-56" label="Prévia do personagem" />
         <div className="relative z-10 mt-1 text-center"><p className="font-display text-xl font-bold">{trimmedName || 'Seu personagem'}</p><p className="max-w-xs text-sm text-white/70">{summary}</p></div>
       </section>
-      <section className="flex flex-col gap-5 rounded-[2rem] border border-border bg-card p-4 shadow-sm sm:p-6">
+      <section className="flex min-w-0 flex-col gap-5 rounded-[2rem] border border-border bg-card p-4 shadow-sm sm:p-6">
         <div className="flex flex-col gap-2"><div className="flex items-center justify-between text-xs text-muted-foreground"><span>Explore as categorias</span><span>{visited.size}/{TABS.length}</span></div><div className="h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary transition-all" style={{ width: `${visited.size / TABS.length * 100}%` }} /></div><div className="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Categorias de personalização">{TABS.map((item) => <button key={item.id} role="tab" aria-selected={tab === item.id} onClick={() => visit(item.id)} className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold ${tab === item.id ? 'bg-foreground text-background' : visited.has(item.id) ? 'bg-accent/20 text-foreground' : 'bg-secondary text-secondary-foreground'}`}>{visited.has(item.id) ? '✓ ' : ''}{item.label}</button>)}</div></div>
         {tab === 'identidade' ? <div className="flex flex-col gap-5"><label className="flex flex-col gap-2 text-sm font-semibold">Nome <input value={name} onChange={(event) => setName(event.target.value)} maxLength={20} autoComplete="off" placeholder="Como a pessoa se chama?" className="h-12 rounded-2xl border border-input bg-background px-4 text-base font-normal outline-none focus-visible:ring-4 focus-visible:ring-ring/40" /></label><fieldset className="flex flex-col gap-2"><legend className="text-sm font-semibold">Identidade</legend><div className="grid grid-cols-2 gap-2">{(['mulher', 'homem'] as Gender[]).map((value) => <Choice key={value} value={value} selected={avatar.gender === value} onClick={(next) => update('gender', next)}>{value === 'mulher' ? 'Mulher' : 'Homem'}</Choice>)}</div></fieldset><fieldset className="flex flex-col gap-2"><legend className="text-sm font-semibold">Dificuldade</legend><div className="grid gap-2 sm:grid-cols-3">{(Object.entries(DIFFICULTIES) as [Difficulty, (typeof DIFFICULTIES)[Difficulty]][]).map(([value, option]) => <button key={value} type="button" aria-pressed={difficulty === value} onClick={() => setDifficulty(value)} className={`flex min-h-20 flex-col rounded-2xl border p-3 text-left transition ${difficulty === value ? 'border-primary bg-primary text-primary-foreground shadow-sm' : 'border-border bg-card hover:border-primary/60'}`}><span className="font-bold">{option.label}</span><span className={`text-xs ${difficulty === value ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>{option.description}</span></button>)}</div></fieldset></div> : null}
-        {tab === 'rosto' ? <div className="flex flex-col gap-5"><ColorChoices label="Tom de pele" value={avatar.skinTone} items={AVATAR_OPTIONS.skinTone} onChange={(value) => update('skinTone', value)} /><ColorChoices label="Cor dos olhos" value={avatar.eyeColor} items={AVATAR_OPTIONS.eyeColor} onChange={(value) => update('eyeColor', value)} /><fieldset className="flex flex-col gap-2"><legend className="text-sm font-semibold">Expressão</legend><div className="grid grid-cols-3 gap-2">{EXPRESSIONS.map(({ value, label }) => <Choice key={value} value={value} selected={avatar.expression === value} onClick={(next) => update('expression', next)}>{label}</Choice>)}</div></fieldset></div> : null}
+        {tab === 'rosto' ? <div className="flex flex-col gap-5"><fieldset className="flex flex-col gap-2"><legend className="text-sm font-semibold">Formato do rosto</legend><div className="grid grid-cols-3 gap-2">{FACE_SHAPES.map(({ value, label }) => <Choice key={value} value={value} selected={avatar.faceShape === value} onClick={(next) => update('faceShape', next)}>{label}</Choice>)}</div></fieldset><ColorChoices label="Tom de pele" value={avatar.skinTone} items={AVATAR_OPTIONS.skinTone} onChange={(value) => update('skinTone', value)} /><ColorChoices label="Cor dos olhos" value={avatar.eyeColor} items={AVATAR_OPTIONS.eyeColor} onChange={(value) => update('eyeColor', value)} /><fieldset className="flex flex-col gap-2"><legend className="text-sm font-semibold">Expressão</legend><div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{EXPRESSIONS.map(({ value, label }) => <Choice key={value} value={value} selected={avatar.expression === value} onClick={(next) => update('expression', next)}>{label}</Choice>)}</div></fieldset></div> : null}
         {tab === 'cabelo' ? <div className="flex flex-col gap-5"><fieldset className="flex flex-col gap-2"><legend className="text-sm font-semibold">Estilo</legend><div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{HAIR_STYLES.map(({ value, label }) => <HairChoice key={value} value={value} label={label} avatar={avatar} selected={avatar.hairStyle === value} onClick={(next) => update('hairStyle', next)} />)}</div></fieldset><ColorChoices label="Cor do cabelo" value={avatar.hairColor} items={AVATAR_OPTIONS.hairColor} onChange={(value) => update('hairColor', value)} /></div> : null}
-        {tab === 'roupa' ? <div className="flex flex-col gap-5"><fieldset className="flex flex-col gap-2"><legend className="text-sm font-semibold">Peça</legend><div className="grid grid-cols-2 gap-2">{([['camiseta', 'Camiseta'], ['moletom', 'Moletom'], ['camisa', 'Camisa'], ['jaqueta', 'Jaqueta']] as [Outfit, string][]).map(([value, label]) => <Choice key={value} value={value} selected={avatar.outfit === value} onClick={(next) => update('outfit', next)}>{label}</Choice>)}</div></fieldset><ColorChoices label="Cor da roupa" value={avatar.outfitColor} items={AVATAR_OPTIONS.outfitColor} onChange={(value) => update('outfitColor', value)} /></div> : null}
+        {tab === 'roupa' ? <div className="flex flex-col gap-5"><fieldset className="flex flex-col gap-2"><legend className="text-sm font-semibold">Peça</legend><div className="grid grid-cols-2 gap-2">{OUTFITS.map(({ value, label, style }) => <button key={value} type="button" aria-pressed={avatar.outfit === value} onClick={() => update('outfit', value)} className={`flex min-h-14 flex-col rounded-2xl border px-3 py-2 text-left transition ${avatar.outfit === value ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card hover:border-primary/60'}`}><span className="text-sm font-bold">{label}</span><span className={`text-xs ${avatar.outfit === value ? 'text-primary-foreground/75' : 'text-muted-foreground'}`}>{style}</span></button>)}</div></fieldset><ColorChoices label="Cor da roupa" value={avatar.outfitColor} items={AVATAR_OPTIONS.outfitColor} onChange={(value) => update('outfitColor', value)} /></div> : null}
         {trimmedName.length > 0 && trimmedName.length < 2 ? <p className="-mt-3 text-sm text-destructive">Use ao menos 2 caracteres no nome.</p> : null}
         {trimmedName.length >= 2 && !ready ? <p className="-mt-3 text-sm text-muted-foreground">Visite todas as categorias para liberar o nascimento.</p> : null}
         <div className="sticky bottom-0 z-20 mt-auto border-t border-border bg-card/95 pt-4 pb-[max(0px,env(safe-area-inset-bottom))] backdrop-blur sm:relative">
