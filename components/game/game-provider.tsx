@@ -27,6 +27,7 @@ function restoredState(): GameState {
       ...candidate,
       avatar: normalizeAvatarConfig(candidate.avatar),
       avatarReaction: null,
+      difficulty: ['normal', 'desafiador', 'intenso'].includes(candidate.difficulty ?? '') ? candidate.difficulty : 'normal',
       dailyActivityCounts: candidate.dailyActivityCounts ?? { exercicio: 0, estudar: 0, socializar: 0, criar: 0, descansar: 0 },
       dailyGainCounts: candidate.dailyGainCounts ?? {},
       lastActivityResult: candidate.lastActivityResult ?? null,

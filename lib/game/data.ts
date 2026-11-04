@@ -9,6 +9,8 @@ import type {
   SleepOption,
   SubKey,
   AvatarConfig,
+  Difficulty,
+  MainStats,
 } from './types'
 export { DEFAULT_AVATAR } from './avatar'
 
@@ -19,6 +21,29 @@ export const REELS_PER_SPEEDUP = 4
 export const MAX_SOCIAL_MINUTES_PER_SECOND = 64
 export const MAX_AGE = 100
 export const DIMINISHING_RETURNS = [1, 1, 0.75, 0.6, 0.4, 0.25, 0.1, 0] as const
+
+export const DIFFICULTIES: Record<Difficulty, { label: string; description: string; wearMultiplier: number; initialMain: MainStats }> = {
+  normal: {
+    label: 'Normal',
+    description: 'Pressão equilibrada para conhecer os sistemas.',
+    wearMultiplier: 1,
+    initialMain: { saude: 24, disposicao: 24, felicidade: 23, dependencia: 8 },
+  },
+  desafiador: {
+    label: 'Desafiador',
+    description: 'Recursos exigem planejamento mais frequente.',
+    wearMultiplier: 1.15,
+    initialMain: { saude: 23, disposicao: 22, felicidade: 21, dependencia: 12 },
+  },
+  intenso: {
+    label: 'Intenso',
+    description: 'Pouca margem para escolhas ruins e excesso de tela.',
+    wearMultiplier: 1.3,
+    initialMain: { saude: 22, disposicao: 20, felicidade: 19, dependencia: 16 },
+  },
+}
+
+export const DEPENDENCY_WEAR_BY_PHASE = [0.3, 0.6, 0.8, 1, 1, 1, 1, 1] as const
 
 export const PHASES: Phase[] = [
   {

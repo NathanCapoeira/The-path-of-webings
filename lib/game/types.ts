@@ -1,5 +1,6 @@
 export type MainKey = 'saude' | 'disposicao' | 'felicidade' | 'dependencia'
 export type SubKey = 'foco' | 'sanidade' | 'forca' | 'inteligencia'
+export type Difficulty = 'normal' | 'desafiador' | 'intenso'
 
 export type MainStats = Record<MainKey, number>
 export type SubStats = Record<SubKey, number>
@@ -152,6 +153,7 @@ export interface GameState {
   name: string
   avatar: AvatarConfig
   avatarReaction: AvatarReaction
+  difficulty: Difficulty
   age: number
   phase: number
   minutes: number

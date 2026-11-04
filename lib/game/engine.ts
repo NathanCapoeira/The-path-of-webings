@@ -14,6 +14,8 @@ import {
   SLEEP_FROM,
   SLEEP_OPTIONS,
   DEFAULT_AVATAR,
+  DEPENDENCY_WEAR_BY_PHASE,
+  DIFFICULTIES,
   DIMINISHING_RETURNS,
   challengeThreshold,
   phaseForAge,
@@ -30,6 +32,7 @@ import type {
   SubStats,
   AvatarConfig,
   GainKey,
+  Difficulty,
 } from './types'
 
 export const clamp = (v: number, min = 0, max = 100) => Math.min(max, Math.max(min, v))
@@ -128,10 +131,12 @@ interface ApplyOptions {
 
 export function applyEffects(state: GameState, effects: Effects, opts: ApplyOptions = {}): GameState {
   const mult = opts.fromActivity ? dependencyGainMultiplier(state.main.dependencia) : 1
+  const wear = DIFFICULTIES[state.difficulty].wearMultiplier
   const main = { ...state.main }
   for (const [k, v] of Object.entries(effects.main ?? {}) as [MainKey, number][]) {
     const positiveGain = v > 0 && k !== 'dependencia'
-    main[k] += positiveGain ? v * mult : v
+    const activityCost = opts.fromActivity && v < 0 && k !== 'dependencia'
+    main[k] += positiveGain ? v * mult : activityCost ? v * wear : v
   }
   const subBase = { ...state.subBase }
   for (const [k, v] of Object.entries(effects.sub ?? {}) as [SubKey, number][]) {
@@ -152,10 +157,12 @@ function advanceTime(state: GameState, minutes: number): GameState {
   minutes = Math.min(minutes, Math.max(0, DAY_END - state.minutes))
   const hours = minutes / 60
   const dep = state.main.dependencia
+  const wear = DIFFICULTIES[state.difficulty].wearMultiplier
+  const dependencyWear = DEPENDENCY_WEAR_BY_PHASE[Math.min(state.phase, DEPENDENCY_WEAR_BY_PHASE.length - 1)]
   const main = { ...state.main }
-  main.disposicao -= (1.2 + dep * 0.025) * hours
-  main.felicidade -= (0.4 + dep * 0.03) * hours
-  if (main.disposicao <= 0) main.saude -= 4 * hours
+  main.disposicao -= (1.2 + dep * 0.025 * dependencyWear) * hours * wear
+  main.felicidade -= (0.4 + dep * 0.03 * dependencyWear) * hours * wear
+  if (main.disposicao <= 0) main.saude -= 4 * hours * wear
   return clampState({ ...state, main, minutes: state.minutes + minutes })
 }
 
@@ -290,18 +297,19 @@ const emptyCategoryCounts = () =>
 const emptyActivityCounts = () =>
   ({ exercicio: 0, estudar: 0, socializar: 0, criar: 0, descansar: 0 })
 
-export function createInitialState(name = '', avatar: AvatarConfig = DEFAULT_AVATAR): GameState {
+export function createInitialState(name = '', avatar: AvatarConfig = DEFAULT_AVATAR, difficulty: Difficulty = 'normal'): GameState {
   return {
     status: name ? 'playing' : 'start',
     view: 'life',
     name,
     avatar,
     avatarReaction: null,
+    difficulty,
     age: 1,
     phase: 0,
     minutes: DAY_START,
-    main: { saude: 85, disposicao: 80, felicidade: 70, dependencia: 0 },
-    subBase: { foco: 20, sanidade: 20, forca: 20, inteligencia: 20 },
+    main: { ...DIFFICULTIES[difficulty].initialMain },
+    subBase: { foco: 22, sanidade: 22, forca: 22, inteligencia: 22 },
     followers: 0,
     feedWeights: Object.fromEntries(
       CATEGORY_ORDER.map((c) => [c, CATEGORIES[c].baseWeight]),
@@ -333,7 +341,7 @@ export function createInitialState(name = '', avatar: AvatarConfig = DEFAULT_AVA
 }
 
 export type GameAction =
-  | { type: 'START'; name: string; avatar: AvatarConfig }
+  | { type: 'START'; name: string; avatar: AvatarConfig; difficulty: Difficulty }
   | { type: 'RESTART' }
   | { type: 'DO_ACTIVITY'; id: ActivityId }
   | { type: 'WAIT_UNTIL_SLEEP' }
@@ -521,7 +529,7 @@ function sleep(state: GameState, optionId: string | null): GameState {
 export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'START':
-      return createInitialState(action.name.trim() || 'Webinho', action.avatar)
+      return createInitialState(action.name.trim() || 'Webinho', action.avatar, action.difficulty)
     case 'RESTART':
       return createInitialState()
     case 'DO_ACTIVITY':

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { PHASES } from '@/lib/game/data'
 import { useGame } from './game-provider'
 import { CharacterCreator } from './character-creator'
-import type { AvatarConfig } from '@/lib/game/types'
+import type { AvatarConfig, Difficulty } from '@/lib/game/types'
 
 const RULES = [
   {
@@ -36,7 +36,7 @@ export function StartScreen() {
   const [creating, setCreating] = useState(false)
 
   if (creating) {
-    return <CharacterCreator onBack={() => setCreating(false)} onStart={(name: string, avatar: AvatarConfig) => dispatch({ type: 'START', name, avatar })} />
+    return <CharacterCreator onBack={() => setCreating(false)} onStart={(name: string, avatar: AvatarConfig, difficulty: Difficulty) => dispatch({ type: 'START', name, avatar, difficulty })} />
   }
 
   return (
