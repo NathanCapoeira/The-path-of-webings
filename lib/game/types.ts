@@ -154,8 +154,10 @@ export type DeathCause = 'saude' | 'exaustao' | 'felicidade' | 'velhice'
 
 export type Gender = 'mulher' | 'homem'
 export type FaceShape = 'oval' | 'redondo' | 'angular'
-export type HairStyle = 'raspado' | 'curto' | 'ondulado' | 'cacheado' | 'longo' | 'afro' | 'trancado' | 'locs' | 'coques' | 'rabo'
-export type Outfit = 'camiseta' | 'oversized' | 'moletom' | 'camisa' | 'jaqueta' | 'bomber' | 'esportivo' | 'social'
+export type HairStyle = string
+export type Outfit = string
+export type HairColorMode = 'solid' | 'highlights' | 'tips' | 'ombre' | 'roots' | 'split' | 'fringe' | 'streaks'
+export type OutfitPattern = 'none' | 'stripes' | 'checker' | 'dots' | 'graphic'
 export type Expression = 'sorriso' | 'serio' | 'calmo' | 'triste' | 'preocupado' | 'cansado' | 'surpreso' | 'irritado'
 export type AvatarReaction = 'celebrate' | 'rest' | null
 
@@ -165,9 +167,18 @@ export interface AvatarConfig {
   skinTone: string
   hairStyle: HairStyle
   hairColor: string
+  hairSecondaryColor: string
+  hairColorMode: HairColorMode
   eyeColor: string
   outfit: Outfit
+  outerwear: string
   outfitColor: string
+  outfitSecondaryColor: string
+  outfitPattern: OutfitPattern
+  headAccessory: string
+  faceAccessory: string
+  earAccessory: string
+  neckAccessory: string
   expression: Expression
 }
 
