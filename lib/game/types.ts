@@ -32,6 +32,9 @@ export interface DigitalEffect {
 export interface RunMetrics {
   activeSeconds: number
   phaseSeconds: number[]
+  feedSeconds: number
+  eventSeconds: number
+  transitionSeconds: number
   lifeActions: number
   socialInteractions: number
   eventsPresented: number

@@ -377,13 +377,14 @@ export function createInitialState(name = '', avatar: AvatarConfig = DEFAULT_AVA
     lastReadLogId: 0,
     digitalEffects: [],
     digitalEffectCounter: 0,
-    metrics: { activeSeconds: 0, phaseSeconds: Array(8).fill(0), lifeActions: 0, socialInteractions: 0, eventsPresented: 0, sleeps: 0 },
+    metrics: { activeSeconds: 0, phaseSeconds: Array(8).fill(0), feedSeconds: 0, eventSeconds: 0, transitionSeconds: 0, lifeActions: 0, socialInteractions: 0, eventsPresented: 0, sleeps: 0 },
     history: [],
     deathCause: null,
   }
 }
 
 export type GameAction =
+  | { type: 'RESTORE_STATE'; state: GameState }
   | { type: 'START'; name: string; avatar: AvatarConfig; difficulty: Difficulty }
   | { type: 'RESTART' }
   | { type: 'DO_ACTIVITY'; id: ActivityId }
@@ -462,7 +463,7 @@ function doActivity(state: GameState, id: ActivityId): GameState {
   if (id === 'socializar') next = recoverTrackedDigitalEffects(next, 'socialize')
 
   next = finalize(next)
-  return maybeTriggerEvent(next, 0.28)
+  return maybeTriggerEvent(next, 0.18)
 }
 
 function applyReel(state: GameState): GameState {
@@ -531,16 +532,20 @@ function sleep(state: GameState, optionId: string | null): GameState {
   const history = [...next.history, snapshot(next)]
   const prevPhase = state.phase
   const yearsPassed = PHASES[prevPhase].yearsPerSleep
-  const age = Math.min(MAX_AGE, state.age + yearsPassed)
+  const proposedAge = Math.min(MAX_AGE, state.age + yearsPassed)
+  const nextPhaseStart = PHASES[prevPhase + 1]?.minAge
+  const age = nextPhaseStart && proposedAge > nextPhaseStart ? nextPhaseStart : proposedAge
   const phase = phaseForAge(age)
+  const elapsedYears = age - state.age
 
   const growth = age <= 18 ? 2 : age < 60 ? 0.5 : 0
   const subBase = { ...next.subBase }
-  for (const key of Object.keys(subBase) as SubKey[]) subBase[key] += growth * yearsPassed
-  if (age >= 60) subBase.forca -= 2 * yearsPassed
+  const growthWeight = Math.min(3, elapsedYears)
+  for (const key of Object.keys(subBase) as SubKey[]) subBase[key] += growth * growthWeight
+  if (age >= 60) subBase.forca -= 4
 
   const main = { ...next.main }
-  if (age >= 40) main.saude -= (2 + Math.max(0, age - 60) * 0.35) * yearsPassed
+  if (age >= 40) main.saude -= 3 + Math.max(0, age - 60) * 0.12
 
   next = clampState({
     ...next,
@@ -560,9 +565,9 @@ function sleep(state: GameState, optionId: string | null): GameState {
     dailyActivityCounts: emptyActivityCounts(),
     dailyGainCounts: {},
     lastActivityResult: null,
-    challenge: scheduleChallenge(phase),
+    challenge: phase !== prevPhase ? scheduleChallenge(phase) : null,
     modal: phase !== prevPhase ? { kind: 'phase', phase } : null,
-    eventsSeen: phase !== prevPhase ? [] : next.eventsSeen,
+    eventsSeen: next.eventsSeen,
     metrics: { ...next.metrics, sleeps: next.metrics.sleeps + 1 },
   })
 
@@ -584,11 +589,13 @@ function sleep(state: GameState, optionId: string | null): GameState {
   }
 
   next = checkDeath(next)
-  return maybeTriggerEvent(next, 0.4)
+  return maybeTriggerEvent(next, phase !== prevPhase ? 0.65 : 0.2)
 }
 
 export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
+    case 'RESTORE_STATE':
+      return action.state
     case 'START':
       return createInitialState(action.name.trim() || 'Webinho', action.avatar, action.difficulty)
     case 'RESTART':
@@ -702,7 +709,14 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (state.status !== 'playing') return state
       const phaseSeconds = [...state.metrics.phaseSeconds]
       phaseSeconds[state.phase] = (phaseSeconds[state.phase] ?? 0) + 1
-      return { ...state, metrics: { ...state.metrics, activeSeconds: state.metrics.activeSeconds + 1, phaseSeconds } }
+      return { ...state, metrics: {
+        ...state.metrics,
+        activeSeconds: state.metrics.activeSeconds + 1,
+        phaseSeconds,
+        feedSeconds: state.metrics.feedSeconds + (state.view === 'social' ? 1 : 0),
+        eventSeconds: state.metrics.eventSeconds + (state.pendingEvent ? 1 : 0),
+        transitionSeconds: state.metrics.transitionSeconds + (state.modal?.kind === 'phase' ? 1 : 0),
+      } }
     }
     case 'EXIT_TO_MENU':
       if (state.status !== 'playing') return state

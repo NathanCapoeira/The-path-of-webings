@@ -78,7 +78,9 @@ export function DeathScreen() {
           { label: 'Seguidores', value: state.followers.toLocaleString('pt-BR') },
           { label: 'Desafios vencidos', value: `${state.challengesPassed}/${state.challengesPassed + state.challengesFailed}` },
           { label: 'Tempo ativo real', value: formatDuration(state.metrics.activeSeconds) },
-          { label: 'Tempo real no feed', value: formatDuration(socialSeconds) },
+          { label: 'Tempo real no feed', value: formatDuration(state.metrics.feedSeconds || socialSeconds) },
+          { label: 'Tempo lendo eventos', value: formatDuration(state.metrics.eventSeconds) },
+          { label: 'Tempo em transições', value: formatDuration(state.metrics.transitionSeconds) },
           { label: 'Ações de vida', value: String(state.metrics.lifeActions) },
           { label: 'Eventos vistos', value: String(state.metrics.eventsPresented) },
           { label: 'Ciclos de sono', value: String(state.metrics.sleeps) },
@@ -97,7 +99,7 @@ export function DeathScreen() {
       <section className="flex flex-col gap-3 rounded-3xl border border-border bg-card p-5" aria-labelledby="ritmo-title">
         <h2 id="ritmo-title" className="font-display text-lg font-bold">Ritmo da partida</h2>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{PHASES.slice(0, 8).map((phase) => <div key={phase.id} className="rounded-2xl bg-secondary p-3"><p className="text-xs text-muted-foreground">{phase.name}</p><p className="font-display text-lg font-bold tabular-nums">{formatDuration(state.metrics.phaseSeconds[phase.id] ?? 0)}</p></div>)}</div>
-        <p className="text-xs text-muted-foreground">Tempo ativo exclui partida pausada, Diário, painel do algoritmo e diálogos informativos.</p>
+        <p className="text-xs text-muted-foreground">Tempo ativo inclui decisões, eventos e transições. Exclui partida pausada, Diário e painel informativo do algoritmo.</p>
       </section>
 
       {state.history.length > 1 ? (

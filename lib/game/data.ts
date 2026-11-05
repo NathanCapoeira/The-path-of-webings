@@ -100,18 +100,18 @@ export const PHASES: Phase[] = [
     name: 'Vida Adulta',
     ageLabel: '18 a 60 anos',
     minAge: 18,
-    yearsPerSleep: 7,
+    yearsPerSleep: 14,
     description:
-      'Entrevistas de emprego, responsabilidades e e-mails fora de hora. Cada noite representa um salto de 7 anos.',
+      'Entrevistas de emprego, responsabilidades e e-mails fora de hora. Cada ciclo resume um período importante da vida adulta.',
   },
   {
     id: 7,
     name: '3ª Idade',
     ageLabel: '60 anos em diante',
     minAge: 60,
-    yearsPerSleep: 10,
+    yearsPerSleep: 20,
     description:
-      'O corpo pede mais cuidado. Cada noite representa um salto de 10 anos rumo ao encerramento da jornada.',
+      'O corpo pede mais cuidado. Cada ciclo resume um período importante da terceira idade.',
   },
   {
     id: 8,
@@ -152,7 +152,7 @@ export const ACTIVITIES: Activity[] = [
     id: 'exercicio',
     name: 'Exercício físico',
     description: 'Aumenta Saúde e Força, mas cansa um pouco.',
-    minutes: 150,
+    minutes: 240,
     minPhase: 1,
     requirements: (p) => ({ forca: scale(8, 3)(p), foco: scale(8, 3)(p) }),
     effects: {
@@ -165,7 +165,7 @@ export const ACTIVITIES: Activity[] = [
     id: 'estudar',
     name: 'Estudar',
     description: 'Aumenta Inteligência e Foco. Cansa e não é tão divertido.',
-    minutes: 180,
+    minutes: 240,
     minPhase: 1,
     requirements: (p) => ({ inteligencia: scale(8, 3)(p), foco: scale(10, 3)(p) }),
     effects: {
@@ -178,7 +178,7 @@ export const ACTIVITIES: Activity[] = [
     id: 'socializar',
     name: 'Socializar',
     description: 'Aumenta Felicidade e Sanidade, diminui a Dependência.',
-    minutes: 180,
+    minutes: 240,
     minPhase: 0,
     requirements: (p) => ({ sanidade: scale(10, 3)(p) }),
     effects: {
@@ -191,7 +191,7 @@ export const ACTIVITIES: Activity[] = [
     id: 'criar',
     name: 'Criar conteúdo na Web',
     description: 'Ganha seguidores. Quanto mais Foco, melhor o conteúdo.',
-    minutes: 180,
+    minutes: 240,
     minPhase: 3,
     requirements: (p) => ({ foco: scale(15, 3)(p) }),
     effects: {
@@ -204,7 +204,7 @@ export const ACTIVITIES: Activity[] = [
     id: 'descansar',
     name: 'Descansar',
     description: 'Uma pausa sem telas. Recupera Disposição, Foco e Sanidade e reduz a Dependência.',
-    minutes: 120,
+    minutes: 180,
     minPhase: 0,
     requirements: () => ({}),
     effects: {

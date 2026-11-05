@@ -21,7 +21,7 @@ function GameView() {
   const [informationOpen, setInformationOpen] = useState(false)
 
   useEffect(() => {
-    if (state.status !== 'playing' || diaryOpen || informationOpen || state.modal) return
+    if (state.status !== 'playing' || diaryOpen || informationOpen) return
     const timer = window.setInterval(() => dispatch({ type: 'ACTIVE_SECOND' }), 1000)
     return () => window.clearInterval(timer)
   }, [state.status, state.modal, diaryOpen, informationOpen, dispatch])
